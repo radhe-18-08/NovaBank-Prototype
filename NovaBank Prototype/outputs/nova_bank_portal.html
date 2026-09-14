@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVA Bank — Secure Online Banking</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI',system-ui,Arial,sans-serif;
+  font-size:14px;line-height:1.5;background:#f0f0f4;color:#111118}
+
+:root{
+  --brand:#141420;--brand-2:#1c1c2c;--brand-3:#242436;--brand-4:#2e2e44;
+  --light:#f8f8f6;--white:#ffffff;--cb:#dcdce8;--cb2:#eaeaf2;
+  --t1:#0e0e1c;--t2:#48485e;--t3:#888898;--t4:#c0c0cc;
+  --b1:#f8f8f6;--b2:#8080a0;--b3:#404058;
+  --ok:#1a4d34;--ok-bg:#eef6f2;--ok-bd:#a8d0bc;
+  --wrn:#56450c;--wrn-bg:#faf4e2;--wrn-bd:#d6c484;
+  --err:#561616;--err-bg:#faf0f0;--err-bd:#d4aaaa;
+  --r:9px;--rs:6px;
+}
+
+.screen{display:none}.screen.active{display:block}
+
+/* ── LOGIN SCREEN ──────────────────────────── */
+#s-login{height:100vh}
+.split{display:grid;grid-template-columns:1fr 1fr;height:100%}
+@media(max-width:768px){.split{grid-template-columns:1fr}}
+
+.brand-panel{background:var(--brand);display:flex;flex-direction:column;
+  padding:0;position:relative;overflow:hidden;}
+.brand-panel::before{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;}
+.brand-nav{padding:22px 32px;border-bottom:1px solid var(--brand-3);
+  display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.brand-logo{font-size:1.05rem;font-weight:800;letter-spacing:3px;
+  color:var(--b1);text-transform:uppercase;}
+.brand-logo em{opacity:0.4;font-style:normal}
+.brand-tagline{font-size:0.62rem;color:var(--b2);letter-spacing:1.5px;
+  text-transform:uppercase;margin-left:auto}
+.brand-body{flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:48px 40px;position:relative;z-index:1;}
+.brand-headline{font-size:1.85rem;font-weight:800;color:var(--b1);line-height:1.2;
+  letter-spacing:-0.5px;margin-bottom:12px;}
+.brand-headline span{opacity:0.35}
+.brand-desc{font-size:0.8rem;color:var(--b2);line-height:1.7;
+  max-width:340px;margin-bottom:40px;}
+.brand-features{display:flex;flex-direction:column;gap:10px}
+.bf{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--brand-3);border-radius:var(--rs);}
+.bf-icon{width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+.bf-text{font-size:0.75rem;color:var(--b1);font-weight:500}
+.bf-sub{font-size:0.66rem;color:var(--b2);margin-top:1px}
+.brand-foot{padding:18px 32px;border-top:1px solid var(--brand-3);
+  font-size:0.63rem;color:var(--b3);letter-spacing:0.3px;position:relative;z-index:1;}
+
+.form-panel{background:var(--light);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 32px;overflow-y:auto;}
+.form-logo-sm{display:none;font-size:0.88rem;font-weight:800;letter-spacing:3px;
+  color:var(--t1);text-transform:uppercase;margin-bottom:28px;}
+@media(max-width:768px){.brand-panel{display:none}.form-logo-sm{display:block}}
+
+.login-card{background:var(--white);border:1px solid var(--cb);
+  border-radius:12px;padding:32px 28px;width:100%;max-width:400px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.06);}
+.lc-head{margin-bottom:24px}
+.lc-title{font-size:1.05rem;font-weight:700;color:var(--t1);letter-spacing:-0.2px}
+.lc-sub{font-size:0.74rem;color:var(--t3);margin-top:3px;line-height:1.5}
+
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:0.66rem;font-weight:700;letter-spacing:0.8px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.fi{width:100%;background:var(--light);border:1px solid var(--cb);
+  border-radius:var(--rs);padding:10px 13px;color:var(--t1);
+  font-size:0.9rem;outline:none;transition:border-color 0.13s;}
+.fi:focus{border-color:#707085;box-shadow:0 0 0 3px rgba(90,90,110,0.07)}
+.fi:disabled{opacity:0.4;cursor:not-allowed}
+.fi.pw{letter-spacing:4px;font-size:0.96rem}
+.fi-select{width:100%;background:var(--light);border:1px solid var(--cb);
+  border-radius:var(--rs);padding:10px 13px;color:var(--t1);font-size:0.9rem;
+  outline:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:36px;}
+.fi-select:focus{border-color:#707085}
+
+.btn-signin{width:100%;margin-top:18px;padding:11px;background:var(--brand);
+  color:var(--b1);border:none;border-radius:var(--rs);
+  font-size:0.84rem;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:background 0.13s;}
+.btn-signin:hover:not(:disabled){background:var(--brand-2)}
+.btn-signin:disabled{opacity:0.3;cursor:not-allowed}
+
+.lc-links{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.lc-link{font-size:0.71rem;color:var(--t3);text-decoration:none;text-align:center}
+.lc-link:hover{color:var(--t1)}
+.lc-security{margin-top:18px;padding:10px 14px;background:#f6f6fa;
+  border:1px solid var(--cb2);border-radius:var(--rs);font-size:0.66rem;
+  color:var(--t3);text-align:center;line-height:1.5;}
+
+.fi-err{font-size:0.7rem;color:var(--err);margin-top:5px;display:none}
+.fi-err.show{display:block}
+
+/* ── STATE PANELS ──────────────────────────── */
+.state-panel{background:var(--white);border:1px solid var(--cb);
+  border-radius:12px;padding:32px 28px;width:100%;max-width:400px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.06);text-align:center;display:none;}
+.state-panel.show{display:block}
+.sp-icon{font-size:2.4rem;margin-bottom:12px}
+.sp-title{font-size:1rem;font-weight:700;margin-bottom:6px}
+.sp-sub{font-size:0.77rem;color:var(--t2);line-height:1.6;margin-bottom:18px}
+.sp-detail{padding:10px 14px;border-radius:var(--rs);font-size:0.73rem;
+  line-height:1.5;text-align:left;margin-bottom:16px;}
+.sp-detail.wrn{background:var(--wrn-bg);border:1px solid var(--wrn-bd);color:var(--wrn)}
+.sp-detail.err{background:var(--err-bg);border:1px solid var(--err-bd);color:var(--err)}
+.otp-input{width:100%;text-align:center;letter-spacing:8px;font-size:1.3rem;
+  padding:10px;border:1px solid var(--cb);border-radius:var(--rs);
+  background:var(--light);color:var(--t1);outline:none;margin-bottom:12px;}
+.otp-input:focus{border-color:#707085}
+.otp-hint{font-size:0.68rem;color:var(--t3);margin-bottom:14px}
+.btn-retry{padding:9px 20px;border-radius:var(--rs);border:1px solid var(--cb);
+  background:transparent;color:var(--t2);font-size:0.75rem;font-weight:600;
+  cursor:pointer;transition:all 0.13s;}
+.btn-retry:hover{border-color:var(--t3);color:var(--t1)}
+.ref-num{font-size:0.66rem;color:var(--t4);margin-top:12px;
+  font-family:'Courier New',monospace;letter-spacing:0.5px;}
+
+/* ── STATEMENT SCREEN ─────────────────────── */
+#s-statement{background:var(--light);min-height:100vh}
+
+.stmt-nav{background:var(--brand);border-bottom:1px solid var(--brand-3);
+  padding:0 28px;height:58px;display:flex;align-items:center;
+  position:sticky;top:0;z-index:50;}
+.stmt-logo{font-size:0.9rem;font-weight:800;letter-spacing:3px;color:var(--b1);text-transform:uppercase;}
+.stmt-logo em{opacity:0.38;font-style:normal}
+.stmt-nav-sep{flex:1}
+.stmt-user{display:flex;align-items:center;gap:10px;font-size:0.76rem;color:var(--b2);}
+.stmt-av{width:30px;height:30px;border-radius:50%;background:var(--brand-3);
+  border:1px solid var(--brand-4);display:flex;align-items:center;
+  justify-content:center;font-size:0.7rem;font-weight:700;color:var(--b1);}
+.stmt-signout{margin-left:14px;padding:6px 14px;border-radius:var(--rs);
+  border:1px solid var(--brand-3);background:transparent;
+  color:var(--b2);font-size:0.7rem;cursor:pointer;transition:all 0.13s;}
+.stmt-signout:hover{border-color:var(--b2);color:var(--b1)}
+
+.auth-banner{background:var(--ok-bg);border-bottom:1px solid var(--ok-bd);
+  padding:10px 28px;display:flex;align-items:center;gap:10px;
+  font-size:0.76rem;color:var(--ok);}
+.auth-banner strong{font-weight:700}
+.auth-banner-right{margin-left:auto;font-size:0.68rem;color:var(--ok);opacity:0.7}
+
+.stmt-body{max-width:960px;margin:0 auto;padding:28px 24px 60px}
+.acct-hd{margin-bottom:22px}
+.acct-type{font-size:0.62rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.acct-name{font-size:1.25rem;font-weight:700;color:var(--t1);letter-spacing:-0.3px}
+.acct-num{font-size:0.78rem;color:var(--t3);margin-top:2px;
+  font-family:'Courier New',monospace;letter-spacing:1px}
+
+.balance-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:600px){.balance-row{grid-template-columns:1fr}}
+.bal-card{background:var(--white);border:1px solid var(--cb);border-radius:var(--r);
+  padding:18px 20px;position:relative;overflow:hidden;}
+.bal-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--brand);border-radius:var(--r) var(--r) 0 0;}
+.bal-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--t3);margin-bottom:8px}
+.bal-amount{font-size:1.45rem;font-weight:800;color:var(--t1);letter-spacing:-0.5px;line-height:1}
+.bal-currency{font-size:0.8rem;font-weight:600;color:var(--t2);margin-right:3px}
+.bal-sub{font-size:0.66rem;color:var(--t3);margin-top:5px}
+
+.security-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:700px){.security-row{grid-template-columns:1fr 1fr}}
+.sec-item{display:flex;align-items:center;gap:9px;
+  padding:10px 14px;background:var(--white);border:1px solid var(--cb);border-radius:var(--rs);}
+.sec-check{width:20px;height:20px;border-radius:50%;background:var(--ok-bg);
+  border:1px solid var(--ok-bd);display:flex;align-items:center;
+  justify-content:center;font-size:0.6rem;color:var(--ok);flex-shrink:0;}
+.sec-label{font-size:0.68rem;font-weight:600;color:var(--t2)}
+.sec-val{font-size:0.62rem;color:var(--t3)}
+
+.txn-section{background:var(--white);border:1px solid var(--cb);border-radius:var(--r);overflow:hidden}
+.txn-hd{padding:16px 20px;border-bottom:1px solid var(--cb2);
+  display:flex;align-items:center;justify-content:space-between;}
+.txn-hd-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t1)}
+.txn-hd-sub{font-size:0.67rem;color:var(--t3)}
+.txn-scroll{overflow-x:auto}
+table.txn{width:100%;border-collapse:collapse;font-size:0.76rem}
+table.txn th{padding:9px 16px;text-align:left;white-space:nowrap;
+  font-size:0.6rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;
+  color:var(--t3);border-bottom:1px solid var(--cb2);background:#fafafa;}
+table.txn th.r{text-align:right}
+table.txn td{padding:11px 16px;border-bottom:1px solid var(--cb2);vertical-align:middle}
+table.txn tr:last-child td{border-bottom:none}
+table.txn tr:hover td{background:#fafafa}
+.txn-desc{font-weight:500;color:var(--t1)}
+.txn-ref{font-size:0.64rem;color:var(--t3);font-family:'Courier New',monospace;margin-top:1px}
+.txn-date{font-size:0.74rem;color:var(--t2);white-space:nowrap}
+.txn-debit{color:var(--err);font-weight:600;text-align:right;white-space:nowrap}
+.txn-credit{color:var(--ok);font-weight:600;text-align:right;white-space:nowrap}
+.txn-bal{color:var(--t1);font-weight:600;text-align:right;white-space:nowrap;
+  font-family:'Courier New',monospace;font-size:0.74rem}
+.txn-empty{color:var(--t4);text-align:right}
+.stmt-footer{margin-top:28px;padding:16px 0;border-top:1px solid var(--cb);
+  font-size:0.64rem;color:var(--t4);line-height:1.6;}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#ccccda;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1 — LOGIN
+═══════════════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="split">
+
+    <!-- BRAND PANEL -->
+    <div class="brand-panel">
+      <div class="brand-nav">
+        <div class="brand-logo">NOVA <em>BANK</em></div>
+        <div class="brand-tagline">Premier Digital Banking</div>
+      </div>
+      <div class="brand-body">
+        <div class="brand-headline">Your finances,<br/><span>protected.</span></div>
+        <div class="brand-desc">
+          NOVA Bank delivers enterprise-grade security with the simplicity of modern
+          digital banking. Your account is protected around the clock with intelligent
+          monitoring that works invisibly in the background.
+        </div>
+        <div class="brand-features">
+          <div class="bf">
+            <div class="bf-icon">&#x1F512;</div>
+            <div>
+              <div class="bf-text">256-bit Encryption</div>
+              <div class="bf-sub">Every session is secured end-to-end</div>
+            </div>
+          </div>
+          <div class="bf">
+            <div class="bf-icon">&#x1F6E1;</div>
+            <div>
+              <div class="bf-text">Intelligent Account Monitoring</div>
+              <div class="bf-sub">Suspicious activity detected automatically</div>
+            </div>
+          </div>
+          <div class="bf">
+            <div class="bf-icon">&#x2705;</div>
+            <div>
+              <div class="bf-text">Zero Liability Guarantee</div>
+              <div class="bf-sub">You are never responsible for unauthorised transactions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="brand-foot">
+        &copy; 2026 NOVA Bank &nbsp;&mdash;&nbsp; Academic research prototype &nbsp;&mdash;&nbsp;
+        <a href="enrolment_studio.html" style="color:var(--b3);text-decoration:none">&#x2190; Enrolment Studio</a>
+      </div>
+    </div>
+
+    <!-- FORM PANEL -->
+    <div class="form-panel">
+      <div class="form-logo-sm">NOVA <span style="opacity:0.35">BANK</span></div>
+
+      <!-- LOGIN FORM -->
+      <div class="login-card" id="lc-form">
+        <div class="lc-head">
+          <div class="lc-title">Sign In to Online Banking</div>
+          <div class="lc-sub">Enter your username and password to access your account.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Username</label>
+          <select class="fi-select" id="ln-user">
+            <option value="">— Select username —</option>
+          </select>
+          <div class="fi-err" id="err-user">Please select your username.</div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input type="password" class="fi pw" id="ln-pass"
+            placeholder="Enter your password…" autocomplete="off" disabled/>
+          <div class="fi-err" id="err-pass"></div>
+        </div>
+
+        <button class="btn-signin" id="btn-signin" disabled onclick="runAuth()">Sign In</button>
+
+        <div class="lc-links">
+          <a class="lc-link" href="#">Forgot your password?</a>
+          <a class="lc-link" href="#">Need help signing in?</a>
+        </div>
+
+        <div class="lc-security">
+          &#x1F512; Your account is protected by intelligent security monitoring.
+        </div>
+      </div>
+
+      <!-- VERIFY PANEL (OTP) -->
+      <div class="state-panel" id="lc-verify">
+        <div class="sp-icon">&#x26A0;&#xFE0F;</div>
+        <div class="sp-title" style="color:var(--wrn)">Additional Verification Required</div>
+        <div class="sp-sub">
+          We noticed something slightly unusual about this sign-in attempt.
+          To protect your account, please verify your identity with a one-time code.
+        </div>
+        <div class="sp-detail wrn">
+          A verification code has been sent to your registered mobile number ending
+          ****-<span id="otp-last4">0000</span>.
+        </div>
+        <div class="otp-hint">Enter the 6-digit code below:</div>
+        <input type="text" class="otp-input" id="otp-input"
+          placeholder="000000" maxlength="6" inputmode="numeric"
+          oninput="this.value=this.value.replace(/\D/g,'')"/>
+        <button class="btn-signin" onclick="submitOTP()" style="margin-top:0">Verify Identity &rarr;</button>
+        <button class="btn-retry" style="margin-top:10px;width:100%" onclick="resetLogin()">&#x2190; Return to Sign In</button>
+        <div class="ref-num" id="verify-ref"></div>
+      </div>
+
+      <!-- BLOCK PANEL -->
+      <div class="state-panel" id="lc-block">
+        <div class="sp-icon">&#x1F6AB;</div>
+        <div class="sp-title" style="color:var(--err)">Sign In Unsuccessful</div>
+        <div class="sp-sub">
+          We couldn't verify this sign-in attempt. For the security of your account,
+          access has been temporarily restricted.
+        </div>
+        <div class="sp-detail err">
+          If this was you, please contact NOVA Bank Support on <strong>800-NOVA (6682)</strong>
+          or visit your nearest branch. Our team is available 24/7 to assist you.
+        </div>
+        <button class="btn-retry" onclick="resetLogin()">&#x2190; Return to Sign In</button>
+        <div class="ref-num" id="block-ref"></div>
+      </div>
+
+    </div><!-- /form-panel -->
+  </div><!-- /split -->
+</div>
+
+
+<!-- ══════════════════════════════════════
+     SCREEN 2 — BANK STATEMENT
+═══════════════════════════════════════════ -->
+<div id="s-statement" class="screen">
+
+  <nav class="stmt-nav">
+    <div class="stmt-logo">NOVA <em>BANK</em></div>
+    <div class="stmt-nav-sep"></div>
+    <div class="stmt-user">
+      <div class="stmt-av" id="stmt-av">—</div>
+      <span id="stmt-username">—</span>
+      <button class="stmt-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Verified banner — no scores shown to customer -->
+  <div class="auth-banner">
+    <span>&#x2705;</span>
+    <span><strong>Identity Verified</strong> &mdash; Your account access has been authorised.</span>
+    <div class="auth-banner-right" id="auth-timestamp">—</div>
+  </div>
+
+  <div class="stmt-body">
+
+    <div class="acct-hd">
+      <div class="acct-type">Premier Current Account</div>
+      <div class="acct-name" id="stmt-acct-name">NOVA Bank Customer</div>
+      <div class="acct-num">IBAN: AE07 0420 0000 0004 8210 000 &nbsp;&bull;&nbsp; Account: 0420 **** **** 4821</div>
+    </div>
+
+    <div class="balance-row">
+      <div class="bal-card">
+        <div class="bal-label">Available Balance</div>
+        <div class="bal-amount"><span class="bal-currency">AED</span>24,850.75</div>
+        <div class="bal-sub">As of today, 18 Aug 2026</div>
+      </div>
+      <div class="bal-card">
+        <div class="bal-label">Current Balance</div>
+        <div class="bal-amount"><span class="bal-currency">AED</span>24,850.75</div>
+        <div class="bal-sub">No pending transactions</div>
+      </div>
+      <div class="bal-card">
+        <div class="bal-label">Monthly Spend</div>
+        <div class="bal-amount"><span class="bal-currency">AED</span>3,644.88</div>
+        <div class="bal-sub">August 2026</div>
+      </div>
+    </div>
+
+    <!-- 3 generic security cells — no scores shown -->
+    <div class="security-row">
+      <div class="sec-item">
+        <div class="sec-check">&#x2713;</div>
+        <div>
+          <div class="sec-label">Identity Verified</div>
+          <div class="sec-val">Multi-factor authentication passed</div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-check">&#x2713;</div>
+        <div>
+          <div class="sec-label">Secure Session</div>
+          <div class="sec-val">TLS 1.3 · 256-bit encrypted</div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-check">&#x2713;</div>
+        <div>
+          <div class="sec-label">Account Monitoring</div>
+          <div class="sec-val">Active — no alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="txn-section">
+      <div class="txn-hd">
+        <div>
+          <div class="txn-hd-title">Recent Transactions</div>
+          <div class="txn-hd-sub">Last 10 transactions &mdash; Statement period: Jul–Aug 2026</div>
+        </div>
+        <span style="font-size:0.68rem;color:var(--t3)">Amounts in AED</span>
+      </div>
+      <div class="txn-scroll">
+        <table class="txn">
+          <thead>
+            <tr>
+              <th>Date</th><th>Description</th><th>Reference</th>
+              <th class="r">Debit</th><th class="r">Credit</th><th class="r">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="txn-date">17 Aug 2026</td><td><div class="txn-desc">Amazon.ae Purchase</div><div class="txn-ref">TXN-88432</div></td><td class="txn-ref">POS-REF-001</td><td class="txn-debit">149.00</td><td class="txn-empty">—</td><td class="txn-bal">24,850.75</td></tr>
+            <tr><td class="txn-date">15 Aug 2026</td><td><div class="txn-desc">Salary — Talabat DMCC</div><div class="txn-ref">SAL-00821</div></td><td class="txn-ref">SAL-REF-08</td><td class="txn-empty">—</td><td class="txn-credit">18,000.00</td><td class="txn-bal">24,999.75</td></tr>
+            <tr><td class="txn-date">14 Aug 2026</td><td><div class="txn-desc">La Mer Dining — Dubai</div><div class="txn-ref">TXN-88105</div></td><td class="txn-ref">POS-REF-002</td><td class="txn-debit">320.50</td><td class="txn-empty">—</td><td class="txn-bal">6,999.75</td></tr>
+            <tr><td class="txn-date">12 Aug 2026</td><td><div class="txn-desc">Netflix Subscription</div><div class="txn-ref">TXN-87990</div></td><td class="txn-ref">SUB-REF-007</td><td class="txn-debit">42.99</td><td class="txn-empty">—</td><td class="txn-bal">7,320.25</td></tr>
+            <tr><td class="txn-date">10 Aug 2026</td><td><div class="txn-desc">ATM Cash Withdrawal — DIFC</div><div class="txn-ref">ATM-22301</div></td><td class="txn-ref">ATM-REF-040</td><td class="txn-debit">500.00</td><td class="txn-empty">—</td><td class="txn-bal">7,363.24</td></tr>
+            <tr><td class="txn-date">09 Aug 2026</td><td><div class="txn-desc">Spinneys Supermarket</div><div class="txn-ref">TXN-87540</div></td><td class="txn-ref">POS-REF-003</td><td class="txn-debit">285.40</td><td class="txn-empty">—</td><td class="txn-bal">7,863.24</td></tr>
+            <tr><td class="txn-date">07 Aug 2026</td><td><div class="txn-desc">DEWA Utility Bill</div><div class="txn-ref">TXN-87280</div></td><td class="txn-ref">BILL-REF-08</td><td class="txn-debit">450.00</td><td class="txn-empty">—</td><td class="txn-bal">8,148.64</td></tr>
+            <tr><td class="txn-date">05 Aug 2026</td><td><div class="txn-desc">Inward Bank Transfer</div><div class="txn-ref">TRF-10220</div></td><td class="txn-ref">TRF-REF-012</td><td class="txn-empty">—</td><td class="txn-credit">2,000.00</td><td class="txn-bal">8,598.64</td></tr>
+            <tr><td class="txn-date">01 Aug 2026</td><td><div class="txn-desc">Fitness First — JBR Branch</div><div class="txn-ref">TXN-86755</div></td><td class="txn-ref">POS-REF-004</td><td class="txn-debit">299.00</td><td class="txn-empty">—</td><td class="txn-bal">6,598.64</td></tr>
+            <tr><td class="txn-date">31 Jul 2026</td><td><div class="txn-desc">Credit Card Auto-Settlement</div><div class="txn-ref">TXN-86502</div></td><td class="txn-ref">CC-REF-0731</td><td class="txn-debit">1,500.00</td><td class="txn-empty">—</td><td class="txn-bal">6,897.64</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stmt-footer">
+      NOVA Bank Premier Current Account &bull; Statement Reference: STM-2026-08-4821 &bull;
+      Simulated statement for academic research prototype only. Not a real banking record.
+    </div>
+
+  </div>
+</div><!-- /s-statement -->
+
+
+<script>
+/*
+ * NOVA Bank — Academic Prototype Security Notes
+ * ─────────────────────────────────────────────
+ * This is a localhost research prototype. It is NOT production-ready banking software.
+ *
+ * Security measures IN PLACE (prototype level):
+ *   ✓ Argon2id password hashing (OWASP recommended)
+ *   ✓ Passwords verified on backend only — never stored client-side
+ *   ✓ No passwords in localStorage / sessionStorage
+ *   ✓ No passwords in query strings or URLs
+ *   ✓ Typed password cleared from variables after use
+ *   ✓ No password or hash exposed in API responses
+ *   ✓ No password logged or printed server-side
+ *   ✓ Keystroke features (not passwords) sent to ML model
+ *   ✓ Two-signal behavioural authentication (RF + profile deviation)
+ *
+ * A production banking implementation would ADDITIONALLY require:
+ *   ✗ HTTPS / TLS (all traffic encrypted in transit)
+ *   ✗ Secure session management (HttpOnly, Secure, SameSite cookies)
+ *   ✗ CSRF protection on all state-changing endpoints
+ *   ✗ Rate limiting and account lockout after failed login attempts
+ *   ✗ Database encryption and access controls
+ *   ✗ Secret management (environment variables, not hardcoded)
+ *   ✗ Formal MFA integration (TOTP, hardware tokens)
+ *   ✗ Audit logging and anomaly alerting
+ *   ✗ Security headers (CSP, HSTS, X-Frame-Options)
+ *   ✗ Penetration testing and code audit
+ */
+
+/* ── CONFIG ──────────────────────────────── */
+const BACKEND_URL = 'http://localhost:5001';
+
+/* ── STATE ───────────────────────────────── */
+let keyData  = [];
+let held     = {};
+let lastResult = null;
+
+/* ── LOAD USERNAMES ──────────────────────── */
+async function loadProfiles() {
+  try {
+    const d = await fetch(`${BACKEND_URL}/api/profiles`).then(r => r.json());
+    const names = (d.profiles || []).map(p => p.username);
+    const sel = document.getElementById('ln-user');
+    sel.innerHTML = '<option value="">— Select username —</option>';
+    if (names.length === 0) {
+      sel.innerHTML += '<option value="" disabled>No profiles enrolled yet</option>';
+      return;
+    }
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    document.getElementById('ln-user').innerHTML =
+      '<option value="">Unable to connect — is the backend running?</option>';
+  }
+}
+
+/* ── USER SELECTION ──────────────────────── */
+document.getElementById('ln-user').addEventListener('change', function() {
+  clearErrors();
+  keyData = []; held = {};
+  const passEl   = document.getElementById('ln-pass');
+  const signinEl = document.getElementById('btn-signin');
+  passEl.value = '';
+  if (this.value) {
+    passEl.disabled = false; signinEl.disabled = false;
+    setTimeout(() => passEl.focus(), 80);
+  } else {
+    passEl.disabled = true; signinEl.disabled = true;
+  }
+});
+
+/* ── KEYSTROKE CAPTURE ───────────────────── */
+(function initKS() {
+  const input = document.getElementById('ln-pass');
+  input.addEventListener('keydown', e => {
+    if (e.key.length !== 1) return;
+    (held[e.key] = held[e.key] || []).push(performance.now());
+  });
+  input.addEventListener('keyup', e => {
+    if (e.key === 'Enter') { runAuth(); return; }
+    if (e.key.length !== 1) return;
+    if (held[e.key]?.length)
+      keyData.push({ downTime: held[e.key].shift(), upTime: performance.now() });
+  });
+})();
+
+/* ── AUTHENTICATE ────────────────────────── */
+async function runAuth() {
+  clearErrors();
+  const username = document.getElementById('ln-user').value;
+  const typed    = document.getElementById('ln-pass').value;
+  const kd       = [...keyData];
+
+  document.getElementById('ln-pass').value = '';
+  keyData = []; held = {};
+
+  if (!username) { showErr('err-user', 'Please select your username.'); return; }
+  if (kd.length < 2) {
+    showErr('err-pass', 'Please type your full password.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-signin');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const result = await fetch(`${BACKEND_URL}/api/auth`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        username,
+        password:         typed,        // verified against hash on backend, never stored
+        raw_keydata:      kd,
+        experiment_label: 'unknown',    // customer portal never sets a label
+      }),
+    }).then(r => r.json());
+
+    lastResult = result;
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+
+    if (!result.success) {
+      showErr('err-pass', result.error || 'An error occurred. Please try again.');
+      return;
+    }
+    if (!result.credential_result) {
+      showErr('err-pass', 'Incorrect username or password. Please try again.');
+      return;
+    }
+
+    const decision = result.decision || 'BLOCK';
+    if      (decision === 'ALLOW')  showStatement(username, result);
+    else if (decision === 'VERIFY') showVerify(result);
+    else                            showBlock(result);
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+    showErr('err-pass', 'Service unavailable. Please try again shortly.');
+  }
+}
+
+/* ── SHOW STATEMENT ──────────────────────── */
+function showStatement(username, result) {
+  const now      = new Date();
+  const timeStr  = now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  const dateStr  = now.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('stmt-av').textContent        = username.slice(0,2).toUpperCase();
+  document.getElementById('stmt-username').textContent  = username;
+  document.getElementById('stmt-acct-name').textContent = username.charAt(0).toUpperCase() + username.slice(1) + ' — NOVA Premier Account';
+  document.getElementById('auth-timestamp').textContent = `${timeStr} · ${dateStr}`;
+  switchScreen('s-statement');
+}
+
+/* ── SHOW VERIFY ─────────────────────────── */
+function showVerify(result) {
+  const ref   = result.event_id || ('VRF-' + Date.now().toString(36).toUpperCase());
+  const last4 = String(Math.floor(Math.random() * 9000) + 1000);
+  document.getElementById('otp-last4').textContent  = last4;
+  document.getElementById('otp-input').value        = '';
+  document.getElementById('verify-ref').textContent = `Reference: ${ref}`;
+  hideAllPanels();
+  document.getElementById('lc-verify').classList.add('show');
+}
+
+/* ── SHOW BLOCK ──────────────────────────── */
+function showBlock(result) {
+  const ref = result.event_id || ('INC-' + Date.now().toString(36).toUpperCase().slice(-8));
+  document.getElementById('block-ref').textContent = `Security Reference: ${ref}`;
+  hideAllPanels();
+  document.getElementById('lc-block').classList.add('show');
+}
+
+/* ── OTP ─────────────────────────────────── */
+function submitOTP() {
+  const code = document.getElementById('otp-input').value;
+  if (code.length < 6) { alert('Please enter the 6-digit code.'); return; }
+  if (lastResult) showStatement(document.getElementById('ln-user').value, lastResult);
+}
+
+/* ── RESET / SIGNOUT ─────────────────────── */
+function resetLogin() {
+  clearErrors();
+  keyData = []; held = {};
+  document.getElementById('ln-pass').value   = '';
+  document.getElementById('otp-input').value = '';
+  hideAllPanels();
+  document.getElementById('lc-form').style.display = 'block';
+}
+
+function signOut() {
+  resetLogin();
+  switchScreen('s-login');
+}
+
+/* ── HELPERS ─────────────────────────────── */
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function hideAllPanels() {
+  document.getElementById('lc-form').style.display = 'none';
+  document.getElementById('lc-verify').classList.remove('show');
+  document.getElementById('lc-block').classList.remove('show');
+}
+function clearErrors() {
+  document.getElementById('err-user').classList.remove('show');
+  document.getElementById('err-pass').classList.remove('show');
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id); el.textContent = msg; el.classList.add('show');
+}
+
+/* ── INIT ────────────────────────────────── */
+loadProfiles();
+</script>
+</body>
+</html>

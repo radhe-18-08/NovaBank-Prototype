@@ -1,0 +1,8 @@
+event_id,timestamp,username,experiment_label,credential_result,ml_score,profile_score,combined_score,ml_available,decision,risk_level
+EVT-9635FF02,2026-08-24T17:29:12.037810,Radhika,genuine,True,0.7650,0.8052,0.7851,True,ALLOW,LOW
+EVT-20991AFB,2026-08-24T17:29:32.118191,Geetika,impostor,True,0.3100,0.7738,0.5419,True,VERIFY,MEDIUM
+EVT-E0AEBF17,2026-08-24T17:29:43.714771,Varun,impostor,True,0.0900,0.7060,0.3980,True,VERIFY,MEDIUM
+EVT-82436687,2026-08-24T17:29:57.090158,ajay,impostor,True,0.2700,0.6687,0.4693,True,VERIFY,MEDIUM
+EVT-FF6E2D60,2026-08-24T17:30:07.672880,Asha,impostor,True,0.2450,0.8829,0.5639,True,ALLOW,LOW
+EVT-2604EEA7,2026-08-24T17:30:32.471249,Varun,genuine,True,0.5950,0.8421,0.7186,True,ALLOW,LOW
+EVT-FEDB1706,2026-08-24T17:30:49.102531,Geetika,impostor,True,0.4000,0.8532,0.6266,True,ALLOW,LOW

@@ -1,0 +1,31 @@
+======================================================================
+NOVA Bank Keystroke Dynamics — Model Training Report
+Generated: 2026-08-24T15:06:23.750124
+======================================================================
+
+Data source  : original data/profiles.json (sanitised in submission archive)
+Training samples: 30
+Test samples    : 18
+Split strategy  : Temporal 70/30 per-user (first 70% → train, last 30% → test)
+Random seed     : 42
+
+MODEL HYPERPARAMETERS
+  Algorithm     : Random Forest Classifier
+  n_estimators  : 200
+  max_depth     : None (full depth)
+  class_weight  : balanced
+
+EVALUATION RESULTS
+  Overall accuracy : 0.9444
+  Test samples     : 18
+  Correct          : 17
+
+DISCLAIMER
+  These results reflect classification accuracy on enrolment samples.
+  They do NOT represent FAR/FRR on genuine/impostor pairs.
+  Run genuine/impostor experiments and use model/evaluate.py for
+  realistic FAR, FRR, precision, recall, and F1 metrics.
+
+FEATURE IMPORTANCE
+  See feature_importance.csv for full ranking.
+======================================================================

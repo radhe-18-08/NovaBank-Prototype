@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Enrolment Studio — Keystroke Dynamics</title>
+<style>
+/* ── RESET ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI',system-ui,Arial,sans-serif;
+  font-size:14px;line-height:1.5;background:#0d0d14;color:#d4d4e4}
+
+/* ── DESIGN TOKENS ──────────────────────────────────────── */
+:root{
+  --bg:       #0d0d14; --nav:      #08080f; --sb:       #0a0a12;
+  --card:     #ffffff; --card-2:   #f5f5fa;
+  --cb:       #dcdcea; --cb2:      #eaeaf2;
+  --t1: #0d0d1e; --t2: #484860; --t3: #868698;
+  --d1: #d0d0e4; --d2: #5c5c78; --d3: #282836;
+  --db:  #181826; --db2: #20202e; --db3: #2c2c3c;
+  --s0:#1c1c2c; --s1:#3c3c58; --s2:#5e5e78;
+  --s3:#858598; --s4:#a8a8bc; --s5:#ccccd8;
+  --ok:  #1b4d35; --ok-bg:  #eff7f2; --ok-bd:  #aed0be;
+  --wrn: #5a470d; --wrn-bg: #faf4e4; --wrn-bd: #d9c688;
+  --err: #591616; --err-bg: #faf0f0; --err-bd: #d6adad;
+  --r: 9px; --rs: 6px;
+}
+
+/* ── NAVIGATION ─────────────────────────────────────────── */
+.nav{height:52px;background:var(--nav);border-bottom:1px solid var(--db);
+  display:flex;align-items:center;padding:0 22px;gap:0;
+  position:sticky;top:0;z-index:100;}
+.nav-brand{display:flex;flex-direction:column;gap:1px}
+.nav-title{font-size:0.76rem;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--d1)}
+.nav-sub{font-size:0.64rem;color:var(--d2);letter-spacing:0.5px}
+.nav-sep{width:1px;height:26px;background:var(--db2);margin:0 18px}
+.nav-badge{font-size:0.66rem;font-weight:600;letter-spacing:0.3px;
+  padding:3px 10px;border-radius:20px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--db3);color:var(--d2);}
+.nav-link{margin-left:auto;display:flex;align-items:center;gap:5px;
+  padding:6px 14px;border-radius:var(--rs);text-decoration:none;
+  border:1px solid var(--db3);color:var(--d2);font-size:0.72rem;font-weight:500;
+  transition:all 0.14s;letter-spacing:0.2px;}
+.nav-link:hover{border-color:var(--d2);color:var(--d1)}
+
+/* ── BACKEND STATUS INDICATOR ───────────────────────────── */
+.be-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:#444;transition:background 0.3s}
+.be-dot.ok {background:#4daa72}
+.be-dot.err{background:#c04444}
+.be-status{font-size:0.63rem;color:var(--d3);transition:color 0.3s}
+.be-status.ok {color:#4daa72}
+.be-status.err{color:#c04444}
+
+/* ── APP SHELL ──────────────────────────────────────────── */
+.shell{display:flex;height:calc(100vh - 52px)}
+
+/* ── SIDEBAR ────────────────────────────────────────────── */
+.sidebar{width:228px;flex-shrink:0;background:var(--sb);
+  border-right:1px solid var(--db);display:flex;flex-direction:column;}
+.sb-head{padding:15px 14px 11px;border-bottom:1px solid var(--db)}
+.sb-cap{font-size:0.6rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--d3)}
+.sb-meta{font-size:0.67rem;color:var(--d2);margin-top:2px}
+.sb-list{flex:1;overflow-y:auto;padding:6px}
+.sb-row{display:flex;align-items:center;gap:9px;
+  padding:8px 9px;border-radius:var(--rs);margin-bottom:2px;}
+.sb-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.sb-name{font-size:0.79rem;color:var(--d1);flex:1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.sb-tag{font-size:0.66rem;color:var(--d2)}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--db)}
+.btn-add{width:100%;padding:9px;border:1px dashed var(--db3);background:transparent;
+  border-radius:var(--rs);color:var(--d2);font-size:0.74rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.13s;}
+.btn-add:hover{border-color:var(--d2);color:var(--d1)}
+
+/* ── MAIN ───────────────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* ── EMPTY STATE ────────────────────────────────────────── */
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:40px;text-align:center}
+.empty-icon{font-size:2.2rem;opacity:0.22;margin-bottom:4px}
+.empty-h{font-size:0.92rem;font-weight:600;color:var(--d1)}
+.empty-p{font-size:0.77rem;color:var(--d2);max-width:320px;line-height:1.65}
+
+/* ── WHITE CARD ─────────────────────────────────────────── */
+.wc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r)}
+.wc-hd{padding:13px 20px;border-bottom:1px solid var(--cb2);
+  display:flex;align-items:center;gap:10px;}
+.wc-title{font-size:0.7rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--t1)}
+.wc-body{padding:20px}
+
+/* ── ENROL PANEL ────────────────────────────────────────── */
+.enrol-wrap{padding:20px;max-width:580px}
+.cred-banner{display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  padding:10px 14px;background:var(--card-2);border:1px solid var(--cb2);
+  border-radius:var(--rs);}
+.cb-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.cb-name{font-size:0.86rem;font-weight:700;color:var(--t1)}
+.cb-sub{font-size:0.68rem;color:var(--t3)}
+.cred-target{margin-bottom:16px;padding:10px 14px;background:var(--card-2);
+  border:1px solid var(--cb2);border-radius:var(--rs);
+  font-size:0.75rem;color:var(--t2);line-height:1.5;}
+.cred-target span{font-family:'Courier New',monospace;font-size:0.82rem;
+  font-weight:700;color:var(--t1);background:var(--cb2);
+  padding:1px 6px;border-radius:3px}
+
+/* ── FORM ───────────────────────────────────────────────── */
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:0.66rem;font-weight:700;letter-spacing:0.8px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.fi{width:100%;background:var(--card-2);border:1px solid var(--cb);
+  border-radius:var(--rs);padding:9px 13px;
+  color:var(--t1);font-size:0.9rem;outline:none;transition:border-color 0.13s;}
+.fi:focus{border-color:#606070;box-shadow:0 0 0 3px rgba(80,80,100,0.07)}
+.fi:disabled{opacity:0.35;cursor:not-allowed}
+.fi.pw{letter-spacing:4px;font-size:0.96rem}
+
+/* ── PROGRESS ───────────────────────────────────────────── */
+.prog{display:flex;gap:5px;margin:14px 0 5px}
+.ps{flex:1;height:3px;border-radius:2px;background:var(--cb);transition:background 0.24s}
+.ps.done{background:var(--t1)}
+.ps.active{background:var(--t3);animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.prog-note{font-size:0.7rem;color:var(--t3);margin-bottom:12px}
+
+/* ── STATUS PILLS ───────────────────────────────────────── */
+.msg{padding:9px 13px;border-radius:var(--rs);font-size:0.77rem;
+  line-height:1.5;margin-top:10px}
+.msg.info{background:var(--card-2);border:1px solid var(--cb);color:var(--t2)}
+.msg.ok  {background:var(--ok-bg);border:1px solid var(--ok-bd);color:var(--ok)}
+.msg.wrn {background:var(--wrn-bg);border:1px solid var(--wrn-bd);color:var(--wrn)}
+.msg.err {background:var(--err-bg);border:1px solid var(--err-bd);color:var(--err)}
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:5px;
+  padding:7px 15px;border-radius:var(--rs);border:none;
+  font-size:0.75rem;font-weight:600;letter-spacing:0.2px;cursor:pointer;transition:all 0.13s;}
+.btn-dark  {background:var(--t1);color:#fff}
+.btn-dark:hover:not(:disabled){background:#282840}
+.btn-ghost {background:transparent;border:1px solid var(--cb);color:var(--t2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--t3);color:var(--t1)}
+.btn-sm{padding:5px 11px;font-size:0.7rem}
+.btn:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ── DASHBOARD ──────────────────────────────────────────── */
+.dash{padding:20px;display:flex;flex-direction:column;gap:18px}
+.sec-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.sec-title{font-size:0.62rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--d2)}
+.sec-note{font-size:0.66rem;color:var(--d3)}
+
+/* ── PROFILE CARDS ──────────────────────────────────────── */
+.prof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.pc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
+  padding:16px;position:relative;overflow:hidden}
+.pc-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.pc-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pc-av{width:34px;height:34px;border-radius:var(--rs);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:800;color:#fff;}
+.pc-n{font-size:0.83rem;font-weight:700;color:var(--t1)}
+.pc-u{font-size:0.66rem;color:var(--t3);margin-top:1px;font-family:'Courier New',monospace}
+.pc-hr{height:1px;background:var(--cb2);margin:10px 0}
+.pc-m{display:grid;grid-template-columns:1fr 1fr;gap:8px 6px}
+.mi{display:flex;flex-direction:column;gap:1px}
+.mi-l{font-size:0.59rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--t3)}
+.mi-v{font-size:0.98rem;font-weight:700;color:var(--t1);line-height:1.2}
+.mi-u{font-size:0.59rem;font-weight:400;color:var(--t3)}
+.pc-rm{position:absolute;top:8px;right:8px;background:none;border:none;
+  padding:2px 4px;font-size:0.77rem;cursor:pointer;border-radius:3px;
+  color:var(--cb);opacity:0;transition:opacity 0.13s;line-height:1;}
+.pc:hover .pc-rm{opacity:1;color:var(--err)}
+
+/* ── CHART SECTIONS ─────────────────────────────────────── */
+.chart-wrap{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);overflow:hidden}
+.chart-hd{padding:15px 20px 0;display:flex;align-items:flex-start;flex-wrap:wrap;gap:10px}
+.chart-title{font-size:0.7rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--t1)}
+.chart-sub{font-size:0.66rem;color:var(--t3);margin-top:2px;line-height:1.4}
+.chart-legend{display:flex;flex-wrap:wrap;gap:11px;padding:10px 20px 0}
+.leg{display:flex;align-items:center;gap:5px;font-size:0.66rem;color:var(--t2)}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.chart-body{padding:10px 18px 16px}
+
+/* ── TABLE ──────────────────────────────────────────────── */
+.tbl-scroll{overflow-x:auto}
+table.st{width:100%;border-collapse:collapse;font-size:0.72rem}
+table.st th{padding:7px 12px;white-space:nowrap;
+  font-size:0.6rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;
+  color:var(--t3);border-bottom:1px solid var(--cb2);background:var(--card-2);}
+table.st th.r{text-align:right}
+table.st td{padding:7px 12px;color:var(--t2);border-bottom:1px solid var(--cb2)}
+table.st tr:last-child td{border-bottom:none}
+table.st td.mono{font-family:'Courier New',monospace;color:var(--t1);font-size:0.72rem;text-align:right}
+.tbl-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:10px 16px;border-top:1px solid var(--cb2)}
+.tbl-note{font-size:0.66rem;color:var(--t3)}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.17s;}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--cb);border-radius:12px;
+  padding:26px;width:360px;
+  transform:translateY(10px);transition:transform 0.17s;
+  box-shadow:0 24px 60px rgba(0,0,0,0.5);}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-title{font-size:0.9rem;font-weight:700;color:var(--t1);margin-bottom:4px}
+.modal-sub{font-size:0.74rem;color:var(--t2);line-height:1.55;margin-bottom:18px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.pass-hint{font-size:0.66rem;color:var(--t3);margin-top:4px}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--db2);border-radius:3px}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-title">Keystroke Dynamics</div>
+    <div class="nav-sub">Profile Enrolment Studio &mdash; Prototype</div>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-badge" id="nav-badge">0 profiles enrolled</div>
+  <div class="nav-sep"></div>
+  <!-- Backend status indicator -->
+  <div style="display:flex;align-items:center;gap:6px">
+    <div class="be-dot" id="be-dot"></div>
+    <span class="be-status" id="be-status">Connecting…</span>
+  </div>
+  <a class="nav-link" style="margin-left:18px" href="nova_bank_portal.html">NOVA Bank Portal &rarr;</a>
+</nav>
+
+<div class="shell">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="sb-cap">Participants</div>
+      <div class="sb-meta" id="sb-meta">No profiles enrolled</div>
+    </div>
+    <div class="sb-list" id="sb-list">
+      <div style="font-size:0.71rem;color:var(--d3);padding:12px 9px">No participants yet</div>
+    </div>
+    <div class="sb-foot">
+      <button class="btn-add" onclick="openModal()">
+        <span style="font-size:1.1rem;line-height:1">+</span> Add Participant
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Empty -->
+    <div id="v-empty" class="empty">
+      <div class="empty-icon">&#x2328;</div>
+      <div class="empty-h">No profiles enrolled yet</div>
+      <div class="empty-p">
+        Click <strong>Add Participant</strong> to register a custom username and password.
+        Each participant types their password 8 times to build their behavioural signature.
+        They should type at their normal, comfortable speed — not faster or slower than usual.
+        Requires the backend (backend/app.py) to be running.
+      </div>
+    </div>
+
+    <!-- Enrolment Panel -->
+    <div id="v-enrol" class="hidden">
+      <div class="enrol-wrap">
+        <div class="wc">
+          <div class="wc-hd">
+            <span id="e-swatch" style="width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0"></span>
+            <span class="wc-title" id="e-card-title">Enrolment</span>
+            <span id="e-step" style="margin-left:auto;font-size:0.67rem;color:var(--t3)">Sample 1 of 8</span>
+          </div>
+          <div class="wc-body">
+
+            <div class="cred-banner">
+              <div class="cb-sq" id="e-sq"></div>
+              <div>
+                <div class="cb-name" id="e-cname">—</div>
+                <div class="cb-sub">Type your registered password 8 times &mdash; at your normal, comfortable speed</div>
+              </div>
+            </div>
+
+            <!-- Password shown during session only — NEVER stored or sent after enrolment -->
+            <div class="cred-target" id="e-target-box">
+              Type this password exactly: <span id="e-target-val"></span>
+              <span style="font-size:0.62rem;color:var(--t3);margin-left:6px">
+                (shown during enrolment only — not stored)
+              </span>
+            </div>
+
+            <div class="fg">
+              <label class="fl">Username</label>
+              <input type="text" class="fi" id="e-user" disabled/>
+            </div>
+            <div class="fg">
+              <label class="fl">Password — type exactly as shown above, then press Enter</label>
+              <input type="password" class="fi pw" id="e-pass"
+                placeholder="Type your password and press Enter…" autocomplete="off"/>
+            </div>
+
+            <div class="prog" id="e-prog"></div>
+            <div class="prog-note" id="e-prog-note">Sample 1 of 8 — type your password and press Enter</div>
+            <div class="msg info" id="e-msg">&#x1F4A1; Start typing at your normal, comfortable speed. The field clears automatically after each correct entry.</div>
+
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn btn-ghost btn-sm" onclick="cancelEnrol()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="v-dash" class="hidden">
+      <div class="dash">
+
+        <!-- Profile Cards -->
+        <div>
+          <div class="sec-hd">
+            <span class="sec-title">Participant Profiles</span>
+            <span class="sec-note" id="dash-count"></span>
+          </div>
+          <div class="prof-grid" id="prof-grid"></div>
+        </div>
+
+        <!-- Charts rendered dynamically -->
+        <div id="chart-container"></div>
+
+        <!-- Summary Table -->
+        <div class="chart-wrap">
+          <div class="chart-hd">
+            <div>
+              <div class="chart-title">Summary Statistics</div>
+              <div class="chart-sub">Aggregated keystroke metrics across all enrolled participants &mdash; suitable for thesis reporting</div>
+            </div>
+          </div>
+          <div class="tbl-scroll">
+            <table class="st">
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Username</th>
+                  <th>Pwd Length</th>
+                  <th class="r">Avg Hold (ms)</th>
+                  <th class="r">SD Hold (ms)</th>
+                  <th class="r">Avg Flight (ms)</th>
+                  <th class="r">SD Flight (ms)</th>
+                  <th class="r">Total Time (ms)</th>
+                  <th class="r">Samples</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-body"></tbody>
+            </table>
+          </div>
+          <div class="tbl-foot">
+            <span class="tbl-note">Export raw keystroke data (no passwords included)</span>
+            <button class="btn btn-ghost btn-sm" onclick="exportJSON()">&#x2B07; Export JSON</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODAL ════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modal" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="modal-title">Add New Participant</div>
+    <div class="modal-sub">
+      Create custom credentials for this participant. They will type their
+      own password 8 times to capture their unique keystroke timing profile.
+      They should type at their normal, comfortable speed — not faster or slower than usual.
+      The password is hashed on the backend and never stored in plaintext.
+    </div>
+
+    <div class="modal-row">
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Username</label>
+        <input type="text" class="fi" id="m-user" placeholder="e.g. radhika" maxlength="24"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label class="fl">Password</label>
+        <input type="text" class="fi" id="m-pass" placeholder="e.g. SecurePass1" maxlength="32"/>
+        <div class="pass-hint">Shown during enrolment &mdash; min 4 characters</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-dark" style="flex:1" onclick="submitModal()">Begin Enrolment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════════ */
+const N_SAMP      = 8;   // 8 valid samples per user (changed from 3 — dissertation experiment: 5 users × 8 samples = 40 total)
+const MAX_CHART   = 14;
+const BACKEND_URL = 'http://localhost:5001';
+
+// Monochromatic cool blue-gray shades (dark → light)
+const SHADES = ['#1c1c2c','#3c3c58','#5e5e78','#858598','#a8a8bc','#ccccd8'];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   profiles[] is a local display cache — no passwords stored.
+   Actual data lives on the backend.
+═══════════════════════════════════════════════════════════ */
+let profiles  = [];    // [{username, shade_index, password_length, avg_hold, ...}]
+let enrolling = null;  // { username, password, shadeIndex } — password lives here only during session
+let eSamples  = [];    // raw keydata arrays per sample (NOT feature vectors)
+let keyData          = [];
+let held             = {};
+let enterPending     = false;   // true once Enter keydown fires; defers submission until all char keys released
+let corrupted        = false;   // true if Backspace/Delete detected in current sample
+let ksAbortController = null;   // AbortController that owns the current keydown/keyup listeners
+
+/* ═══════════════════════════════════════════════════════════
+   BACKEND COMMUNICATION
+═══════════════════════════════════════════════════════════ */
+async function checkBackend() {
+  try {
+    const r = await fetch(`${BACKEND_URL}/api/health`, {signal: AbortSignal.timeout(3000)});
+    const d = await r.json();
+    setBackendStatus(true, `Backend OK · model: ${d.model_loaded ? 'loaded' : 'not trained'}`);
+    return true;
+  } catch(e) {
+    setBackendStatus(false, 'Backend offline — start backend/app.py');
+    return false;
+  }
+}
+
+function setBackendStatus(ok, msg) {
+  const dot = document.getElementById('be-dot');
+  const txt = document.getElementById('be-status');
+  dot.className = `be-dot ${ok ? 'ok' : 'err'}`;
+  txt.className = `be-status ${ok ? 'ok' : 'err'}`;
+  txt.textContent = msg;
+}
+
+async function apiFetch(method, path, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${BACKEND_URL}${path}`, opts);
+  return r.json();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOAD PROFILES FROM BACKEND
+═══════════════════════════════════════════════════════════ */
+async function loadProfiles() {
+  try {
+    const d = await apiFetch('GET', '/api/profiles');
+    profiles = d.profiles || [];
+    updateSidebar();
+    if (profiles.length > 0 && !enrolling) showDashboard();
+    else if (profiles.length === 0 && !enrolling) showView('empty');
+  } catch(e) {
+    console.warn('Could not load profiles:', e);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYSTROKE ENGINE — v3 (AbortController listener lifecycle)
+
+   WHY cloneNode/replaceChild WAS REMOVED:
+     The previous approach cloned the password input on every
+     startEnrol() call and swapped it into the DOM. Between the
+     replaceChild() call (element inserted) and the setTimeout
+     focus() 80ms later, the browser had not yet fully initialised
+     its security/event layer for the freshly-inserted password
+     field. If even one character's keyup was dropped in that gap,
+     held[key] retained a non-zero queue that could never be drained,
+     making allReleased permanently false and trapping enterPending=true
+     so Enter silently did nothing for the rest of the session.
+
+   FIX — single stable element + AbortController teardown:
+     bindKS() now attaches listeners directly to the existing #e-pass
+     element (no cloning, no DOM replacement). Before attaching, it
+     aborts any controller from a prior session so previous listeners
+     are removed atomically. The element is always the same DOM node;
+     only the listeners change between participants.
+
+   ENTER KEY — pending-Enter flag + all-released guard (unchanged):
+     Enter keydown  → enterPending = true (do NOT submit yet)
+     Every keyup    → record char timing first, then if enterPending
+                      AND held is fully drained → submit
+     This handles fast typing where Enter is pressed before releasing
+     the last character key, regardless of physical release order.
+
+   BACKSPACE / DELETE:
+     corrupted = true → sample discarded in handleSample.
+
+   REPEATED CHARACTERS:
+     held[key] is a FIFO queue (push keydown, shift keyup).
+
+   SHIFT / CTRL / ALT / META:
+     Filtered by e.key.length !== 1 on keydown.
+
+   SHIFT-RELEASE STUCK-STATE FIX (e.code, not e.key, for held tracking):
+     If a participant types an uppercase letter (Shift held during keydown)
+     and then releases Shift BEFORE releasing the letter key, the browser
+     reports: keydown e.key='A' but keyup e.key='a'. Using e.key for held
+     lookups caused held['A']=[t] to persist forever because keyup searched
+     held['a'] (not found) and left the queue non-empty. allReleased was then
+     permanently false, enterPending stayed true, and every subsequent Enter
+     press was silently ignored. Switching to e.code (e.g. 'KeyA', 'Digit1')
+     for held tracking fixes this: e.code is invariant to Shift/modifier
+     state, so keydown and keyup always pair correctly.
+═══════════════════════════════════════════════════════════ */
+function bindKS(input, onEnter) {
+  // ── Tear down any listeners from a previous session ──────────────────
+  if (ksAbortController) {
+    ksAbortController.abort();
+  }
+  ksAbortController = new AbortController();
+  const { signal } = ksAbortController;
+
+  // ── Reset ALL per-sample capture state ───────────────────────────────
+  keyData      = [];
+  held         = {};
+  enterPending = false;
+  corrupted    = false;
+
+  // ── Attach fresh listeners to the SAME element (no cloneNode) ────────
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      enterPending = true;      // defer submission; wait for all char keys to be released
+      return;
+    }
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      corrupted = true;         // correction detected — this sample will be discarded
+      return;
+    }
+    if (e.key.length !== 1) return;   // ignore Shift, Ctrl, Alt, Meta, F-keys, etc.
+    // Use e.code (physical key identifier, e.g. 'KeyA', 'Digit1') as the held
+    // map key — it is invariant to Shift state, preventing the keydown/'A' vs
+    // keyup/'a' mismatch that would leave a stale queue entry and freeze Enter.
+    const code = e.code || e.key;   // fallback for very old browsers
+    if (!held[code]) held[code] = [];
+    held[code].push(performance.now());
+  }, { signal });
+
+  input.addEventListener('keyup', e => {
+    // Step 1: record timing — look up by e.code to match the keydown entry
+    // regardless of whether Shift state changed between keydown and keyup.
+    const code = e.code || e.key;
+    if (held[code]?.length) {
+      keyData.push({ downTime: held[code].shift(), upTime: performance.now() });
+    }
+    // Step 2: submit only when Enter has been pressed AND no character key is still held
+    if (enterPending) {
+      const allReleased = Object.values(held).every(q => q.length === 0);
+      if (allReleased) {
+        enterPending = false;
+        const wasCrpt = corrupted;
+        corrupted = false;
+        onEnter(input, wasCrpt);   // pass the stable element reference
+      }
+    }
+  }, { signal });
+
+  return input;   // same element returned — no clone created
+}
+
+/* Feature extraction — mirrors Python extract_positional_features().
+   Used here only to validate sample completeness; actual features
+   are computed server-side from raw_keydata. */
+function extractFeatures(kd) {
+  const holds   = kd.map(k => k.upTime - k.downTime);
+  const flights = [];
+  for (let i = 0; i < kd.length - 1; i++)
+    flights.push(Math.max(0, kd[i+1].downTime - kd[i].upTime));
+  return [...holds, ...flights];
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+function openModal() {
+  document.getElementById('m-user').value = '';
+  document.getElementById('m-pass').value = '';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('m-user').focus(), 150);
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function bgClick(e)   { if (e.target.id === 'modal') closeModal(); }
+
+['m-user','m-pass'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitModal();
+  })
+);
+
+function submitModal() {
+  const username = document.getElementById('m-user').value.trim();
+  const password = document.getElementById('m-pass').value;
+  if (!username)           { alert('Please enter a username.'); return; }
+  if (password.length < 4) { alert('Password must be at least 4 characters.'); return; }
+  if (profiles.find(p => p.username === username)) {
+    alert(`Username "${username}" is already enrolled.`); return;
+  }
+  closeModal();
+  startEnrol(username, password);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ENROLMENT FLOW
+   The plaintext password lives only in enrolling.password
+   (in-memory, this session only). It is sent once to the
+   backend at finaliseEnrol() and then explicitly cleared.
+═══════════════════════════════════════════════════════════ */
+function startEnrol(username, password) {
+  const si = profiles.length % SHADES.length;
+  enrolling    = { username, password, shadeIndex: si };
+  eSamples     = [];
+  keyData      = [];
+  held         = {};
+  enterPending = false;
+  corrupted    = false;
+
+  showView('enrol');
+  const shade = SHADES[si];
+  document.getElementById('e-swatch').style.background  = shade;
+  document.getElementById('e-sq').style.background      = shade;
+  document.getElementById('e-card-title').textContent   = `Enrolment — ${username}`;
+  document.getElementById('e-cname').textContent        = username;
+  document.getElementById('e-user').value               = username;
+  // RESEARCH PROTOTYPE NOTE: The password is intentionally shown here so the
+  // researcher can instruct participants what to type during enrolment.
+  // This field is visible only to the researcher operating the enrolment session.
+  // In a production system this would not exist — participants would already know
+  // their own password. This display does NOT persist: it exists only in this
+  // session's DOM and is cleared when the page is navigated away from.
+  document.getElementById('e-target-val').textContent   = password;
+
+  renderProg(0);
+  setMsg('e-msg', 'info',
+    '&#x1F4A1; Type your password at your <strong>normal, comfortable speed</strong> and press Enter. ' +
+    'Do <em>not</em> type faster or slower than usual — natural typing is what we are measuring.');
+
+  const passEl = document.getElementById('e-pass');
+  passEl.value    = '';
+  passEl.disabled = false;
+  bindKS(passEl, handleSample);          // attaches fresh listeners; no DOM replacement
+  setTimeout(() => passEl.focus(), 80);  // focus the stable element directly
+  updateSidebar();
+}
+
+function handleSample(input, wasCorrupted) {
+  const typed = input.value;
+  input.value = '';
+  const { password } = enrolling;
+
+  // Current sample number = number of valid samples already stored + 1
+  const nextSample = eSamples.length + 1;
+
+  // ── Shared reset for ALL error paths ─────────────────────────────────────────
+  // Resets every piece of capture state so the next attempt starts clean.
+  // enterPending and corrupted are cleared defensively (they are already false
+  // when handleSample is called, but explicit resets guard against future changes).
+  function discardAndRetry(msg) {
+    setMsg('e-msg', 'wrn', msg);
+    keyData      = [];
+    held         = {};
+    enterPending = false;
+    corrupted    = false;
+    setTimeout(() => input.focus(), 0);
+  }
+
+  // ── Backspace / Delete detected → discard this sample ───────────────────────
+  if (wasCorrupted) {
+    discardAndRetry(
+      `&#x26A0; Correction key detected &mdash; Sample ${nextSample} discarded. ` +
+      `No problem &mdash; please repeat Sample ${nextSample} of ${N_SAMP} ` +
+      `without using Backspace or Delete.`
+    );
+    return;
+  }
+
+  // ── Wrong password typed ─────────────────────────────────────────────────────
+  // SECURITY: Do NOT include the password in the error message.
+  // The password is shown separately in the "Type this password:" field above.
+  if (typed !== password) {
+    discardAndRetry(
+      `&#x26A0; Password did not match &mdash; Sample ${nextSample} discarded. ` +
+      `No problem &mdash; please repeat Sample ${nextSample} of ${N_SAMP}.`
+    );
+    return;
+  }
+
+  // ── Incomplete capture — safety net (should not fire with fixed bindKS) ─────
+  if (keyData.length < password.length) {
+    discardAndRetry(
+      `&#x26A0; Capture incomplete (${keyData.length}&#47;${password.length} keys) &mdash; ` +
+      `Sample ${nextSample} discarded. ` +
+      `No problem &mdash; please repeat Sample ${nextSample} of ${N_SAMP} at your normal speed.`
+    );
+    return;
+  }
+
+  // ── Valid sample — compute diagnostic stats (no password content) ────────────
+  const kd = [...keyData];
+  const holds   = kd.map(k => k.upTime  - k.downTime);
+  const flights = [];
+  for (let i = 0; i < kd.length - 1; i++)
+    flights.push(Math.max(0, kd[i + 1].downTime - kd[i].upTime));
+  const meanHold   = Math.round(holds.reduce((a, b) => a + b, 0) / holds.length);
+  const meanFlight = flights.length > 0
+    ? Math.round(flights.reduce((a, b) => a + b, 0) / flights.length)
+    : 0;
+  const totalDur = Math.round(kd[kd.length - 1].upTime - kd[0].downTime);
+
+  // Store raw keyData (downTime/upTime pairs) — features computed server-side
+  eSamples.push([...keyData]);
+  keyData = []; held = {};
+
+  const done = eSamples.length;
+  renderProg(done);
+
+  if (done < N_SAMP) {
+    // Diagnostic stats after each sample — helps verify capture quality
+    setMsg('e-msg','ok',
+      `&#x2713; Sample ${done} recorded &mdash; ${N_SAMP - done} more to go. ` +
+      `<span style="font-size:0.72rem;opacity:0.7;margin-left:4px">` +
+      `[keys: ${kd.length}/${password.length} &bull; hold: ${meanHold}ms &bull; flight: ${meanFlight}ms &bull; duration: ${totalDur}ms]` +
+      `</span>`);
+    // ── Re-focus the input so the participant can immediately type the next
+    //    sample without having to click. setTimeout(0) defers the call until
+    //    after the current keyup event and any DOM updates have fully settled,
+    //    preventing the browser from re-stealing focus after the Enter keyup.
+    setTimeout(() => input.focus(), 0);
+  } else {
+    finaliseEnrol();
+  }
+}
+
+function renderProg(done) {
+  document.getElementById('e-prog').innerHTML =
+    Array.from({length:N_SAMP}, (_,i) =>
+      `<div class="ps${i<done?' done':i===done?' active':''}"></div>`
+    ).join('');
+  document.getElementById('e-prog-note').textContent =
+    done < N_SAMP
+      ? `Sample ${done+1} of ${N_SAMP} — type your password and press Enter`
+      : 'All samples recorded — submitting to backend…';
+  document.getElementById('e-step').textContent = `Sample ${Math.min(done+1,N_SAMP)} of ${N_SAMP}`;
+}
+
+async function finaliseEnrol() {
+  const { username, password, shadeIndex } = enrolling;
+  const passwordLength = password.length;
+
+  setMsg('e-msg', 'info', '&#x23F3; Sending profile to backend for secure storage…');
+  document.getElementById('e-pass').disabled = true;
+
+  // ── Helper: wipe ALL enrolment session state ───────────────────────────────
+  // Called on every exit path so the UI is never left in a half-finished state.
+  // The plaintext `password` was a local const extracted above and sent to the
+  // backend; it will be GC'd when this function returns. Setting enrolling=null
+  // is the critical step — loadProfiles() only navigates away when !enrolling.
+  function _clearSession() {
+    // Remove keyboard listeners before clearing state so no stale events
+    // from participant N's session fire into participant N+1's handlers.
+    if (ksAbortController) { ksAbortController.abort(); ksAbortController = null; }
+    enrolling    = null;   // ← MUST be null before loadProfiles() is called
+    eSamples     = [];
+    keyData      = [];
+    held         = {};
+    enterPending = false;
+    corrupted    = false;
+    const passEl = document.getElementById('e-pass');
+    passEl.disabled = false;
+    passEl.value    = '';
+  }
+
+  // ── Send to backend ────────────────────────────────────────────────────────
+  let result;
+  try {
+    result = await apiFetch('POST', '/api/enrol', {
+      username,
+      password,             // sent once over localhost; hashed immediately by backend
+      password_length: passwordLength,
+      shade_index:     shadeIndex,
+      raw_samples:     eSamples,
+    });
+  } catch(e) {
+    // Network error — backend not running or unreachable
+    setMsg('e-msg','err','&#x26A0; Backend unreachable — is backend/app.py running? Click Cancel to go back.');
+    console.error(e);
+    // Re-enable input and leave enrolling intact so Cancel works cleanly
+    document.getElementById('e-pass').disabled = false;
+    return;
+  }
+
+  // ── Clear all session state now — password is no longer needed ────────────
+  _clearSession();
+
+  if (!result.success) {
+    // Backend rejected (e.g. duplicate username). Navigate away cleanly.
+    setMsg('e-msg','err', `&#x26A0; ${result.error || 'Enrolment failed.'} Click "Add Participant" to try again.`);
+    await loadProfiles();   // enrolling is null → will navigate to dashboard/empty
+    return;
+  }
+
+  // ── Success ────────────────────────────────────────────────────────────────
+  setMsg('e-msg','ok', `&#x2713; Profile for <strong>${username}</strong> enrolled successfully.`);
+  await loadProfiles();     // enrolling is null → navigates to dashboard
+}
+
+function cancelEnrol() {
+  if (ksAbortController) { ksAbortController.abort(); ksAbortController = null; }
+  enrolling    = null;
+  eSamples     = [];
+  keyData      = [];
+  held         = {};
+  enterPending = false;
+  corrupted    = false;
+  const passEl = document.getElementById('e-pass');
+  passEl.disabled = false;
+  passEl.value    = '';
+  updateSidebar();
+  profiles.length > 0 ? showDashboard() : showView('empty');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD
+   Groups charts by passwordLength (proxy for same-password groups,
+   since the plaintext password is no longer stored client-side).
+═══════════════════════════════════════════════════════════ */
+function showDashboard() {
+  showView('dash');
+  document.getElementById('dash-count').textContent =
+    `${profiles.length} participant${profiles.length!==1?'s':''} enrolled`;
+  renderCards(profiles);
+  renderAllCharts(profiles);
+  renderTable(profiles);
+}
+
+/* ── PROFILE CARDS ──────────────────────────────────────── */
+function renderCards(list) {
+  document.getElementById('prof-grid').innerHTML = list.map(p => {
+    const shade  = SHADES[p.shade_index % SHADES.length];
+    const init   = p.username.slice(0,2).toUpperCase();
+    const pwMask = '•'.repeat(Math.min(p.password_length, 8));
+    return `
+    <div class="pc">
+      <div class="pc-bar" style="background:${shade}"></div>
+      <button class="pc-rm" onclick="removeUser('${p.username.replace(/'/g,"\\'")}')">&#x2715;</button>
+      <div class="pc-top">
+        <div class="pc-av" style="background:${shade}">${init}</div>
+        <div>
+          <div class="pc-n">${p.username}</div>
+          <div class="pc-u">${pwMask} &nbsp;&bull;&nbsp; ${p.password_length}-char pwd</div>
+        </div>
+      </div>
+      <div class="pc-hr"></div>
+      <div class="pc-m">
+        <div class="mi"><div class="mi-l">Avg Hold</div>
+          <div class="mi-v">${p.avg_hold}<span class="mi-u"> ms</span></div></div>
+        <div class="mi"><div class="mi-l">Avg Flight</div>
+          <div class="mi-v">${p.avg_flight}<span class="mi-u"> ms</span></div></div>
+        <div class="mi"><div class="mi-l">Total Time</div>
+          <div class="mi-v">${p.total_time}<span class="mi-u"> ms</span></div></div>
+        <div class="mi"><div class="mi-l">SD Hold</div>
+          <div class="mi-v">${p.avg_hold_sd}<span class="mi-u"> ms</span></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function removeUser(name) {
+  if (!confirm(`Remove profile for "${name}"?`)) return;
+  try {
+    await apiFetch('DELETE', `/api/profiles/${encodeURIComponent(name)}`);
+    await loadProfiles();
+  } catch(e) {
+    alert('Could not remove profile. Is the backend running?');
+  }
+}
+
+/* ── CHARTS ─────────────────────────────────────────────── */
+function renderAllCharts(list) {
+  const container = document.getElementById('chart-container');
+  container.innerHTML = '';
+  if (list.length === 0) return;
+
+  // Group by password_length (proxy grouping since plaintext password is not stored)
+  // Users with the same password length are shown on the same chart.
+  // NOTE: Two users with the same length but different passwords will share a chart.
+  // This is a privacy-safe approximation. In the original system, grouping was exact
+  // (by password text) — now it uses length to avoid storing passwords client-side.
+  const groups = {};
+  list.forEach(p => {
+    const key = p.password_length;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+
+  Object.entries(groups).forEach(([pLen, users]) => {
+    pLen = parseInt(pLen);
+    const nHold   = Math.min(pLen, MAX_CHART);
+    const nFlight = Math.min(pLen - 1, MAX_CHART - 1);
+    const holdLbls   = Array.from({length:nHold},(_,i)=>`K${i+1}`);
+    const flightLbls = Array.from({length:nFlight},(_,i)=>`K${i+1}→${i+2}`);
+    const groupLabel = users.length > 1
+      ? `Users: ${users.map(p=>p.username).join(', ')}`
+      : users[0].username;
+    const pwdNote = `(${pLen}-character password)`;
+
+    // Hold Time Chart
+    const holdSection = makeChartSection(
+      'Key Hold Duration',
+      `Mean hold time (ms) per key position &mdash; ${pwdNote} &mdash; whiskers show &plusmn;1 SD`,
+      users
+    );
+    holdSection.querySelector('.chart-body').innerHTML =
+      buildSVG(users, 0, nHold, holdLbls);
+    container.appendChild(holdSection);
+
+    // Flight Time Chart
+    if (nFlight > 0) {
+      const flightSection = makeChartSection(
+        'Inter-Key Flight Time',
+        `Mean flight time (ms) between consecutive keys &mdash; ${pwdNote} &mdash; whiskers show &plusmn;1 SD`,
+        users
+      );
+      flightSection.querySelector('.chart-body').innerHTML =
+        buildSVG(users, pLen, nFlight, flightLbls);
+      container.appendChild(flightSection);
+    }
+  });
+}
+
+function makeChartSection(title, sub, users) {
+  const div = document.createElement('div');
+  div.className = 'chart-wrap';
+  div.innerHTML = `
+    <div class="chart-hd">
+      <div>
+        <div class="chart-title">${title}</div>
+        <div class="chart-sub">${sub}</div>
+      </div>
+    </div>
+    <div class="chart-legend">
+      ${users.map(p =>
+        `<span class="leg"><span class="leg-sq" style="background:${SHADES[p.shade_index%SHADES.length]}"></span>${p.username}</span>`
+      ).join('')}
+    </div>
+    <div class="chart-body"></div>`;
+  return div;
+}
+
+function buildSVG(users, offset, count, labels) {
+  const nU = users.length;
+  const W=580, H=190, L=46, R=12, T=16, B=36;
+  const cW=W-L-R, cH=H-T-B;
+  const groupW = cW/count;
+  const barW   = Math.max(5, Math.min(22, (groupW-10)/Math.max(nU,1) - 2));
+  const gw     = nU*barW + (nU-1)*2;
+
+  const vals = users.flatMap(p =>
+    Array.from({length:count}, (__,i) =>
+      (p.positional_means[offset+i]||0) + (p.positional_stds[offset+i]||0))
+  );
+  const maxV = Math.max(...vals, 60) * 1.1;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">`;
+
+  for (let s=0; s<=4; s++) {
+    const v = Math.round((s/4)*maxV);
+    const y = T + cH - (s/4)*cH;
+    svg += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="#eaeaf2" stroke-width="1"/>`;
+    svg += `<text x="${L-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="9" fill="#9898b0">${v}</text>`;
+  }
+  svg += `<line x1="${L}" y1="${T}" x2="${L}" y2="${T+cH}" stroke="#c8c8d8" stroke-width="1.5"/>`;
+  svg += `<line x1="${L}" y1="${T+cH}" x2="${W-R}" y2="${T+cH}" stroke="#c8c8d8" stroke-width="1.5"/>`;
+  svg += `<text x="10" y="${(T+cH/2).toFixed(1)}" text-anchor="middle" font-size="9" fill="#9898b0"
+    transform="rotate(-90,10,${(T+cH/2).toFixed(1)})">ms</text>`;
+
+  for (let i=0; i<count; i++) {
+    const gx = L + i*groupW + groupW/2 - gw/2;
+    users.forEach((p, j) => {
+      const means = p.positional_means || [];
+      const stds  = p.positional_stds  || [];
+      const mean  = means[offset+i] || 0;
+      const std   = stds[offset+i]  || 0;
+      const bH    = Math.max(2, (mean/maxV)*cH);
+      const x     = gx + j*(barW+2);
+      const y     = T + cH - bH;
+      const cx    = x + barW/2;
+      const shade = SHADES[p.shade_index % SHADES.length];
+
+      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${bH.toFixed(1)}"
+        fill="${shade}" rx="2" opacity="0.88">
+        <title>${p.username}: ${mean.toFixed(1)}ms ±${std.toFixed(1)}ms</title></rect>`;
+
+      const eTop = Math.max(T, T+cH-((mean+std)/maxV)*cH);
+      const eBot = Math.min(T+cH, T+cH-((mean-std)/maxV)*cH);
+      const cap  = 3;
+      svg += `<line x1="${cx.toFixed(1)}" y1="${eTop.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${eBot.toFixed(1)}" stroke="#444" stroke-width="1.2" opacity="0.5"/>`;
+      svg += `<line x1="${(cx-cap).toFixed(1)}" y1="${eTop.toFixed(1)}" x2="${(cx+cap).toFixed(1)}" y2="${eTop.toFixed(1)}" stroke="#444" stroke-width="1.2" opacity="0.5"/>`;
+      svg += `<line x1="${(cx-cap).toFixed(1)}" y1="${eBot.toFixed(1)}" x2="${(cx+cap).toFixed(1)}" y2="${eBot.toFixed(1)}" stroke="#444" stroke-width="1.2" opacity="0.5"/>`;
+    });
+
+    const lx = L + i*groupW + groupW/2;
+    svg += `<text x="${lx.toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="8.5" fill="#858598">${labels[i]}</text>`;
+    if (i < count-1) {
+      const sx = L + (i+1)*groupW;
+      svg += `<line x1="${sx.toFixed(1)}" y1="${T}" x2="${sx.toFixed(1)}" y2="${T+cH}" stroke="#f0f0f8" stroke-width="0.5"/>`;
+    }
+  }
+  svg += '</svg>';
+  return svg;
+}
+
+/* ── SUMMARY TABLE ──────────────────────────────────────── */
+function renderTable(list) {
+  document.getElementById('tbl-body').innerHTML = list.map(p => {
+    const shade = SHADES[p.shade_index % SHADES.length];
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="width:8px;height:8px;border-radius:2px;background:${shade};display:inline-block;flex-shrink:0"></span>
+          <strong style="color:var(--t1)">${p.username}</strong>
+        </div>
+      </td>
+      <td style="font-family:'Courier New',monospace;font-size:0.72rem;color:var(--t2)">${p.username}</td>
+      <td class="mono">${p.password_length}</td>
+      <td class="mono">${p.avg_hold}</td>
+      <td class="mono">${p.avg_hold_sd}</td>
+      <td class="mono">${p.avg_flight}</td>
+      <td class="mono">${p.avg_flight_sd}</td>
+      <td class="mono">${p.total_time}</td>
+      <td class="mono">${p.samples}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── SIDEBAR ────────────────────────────────────────────── */
+function updateSidebar() {
+  document.getElementById('sb-meta').textContent =
+    profiles.length ? `${profiles.length} enrolled` : 'No profiles enrolled';
+  document.getElementById('nav-badge').textContent =
+    `${profiles.length} profile${profiles.length!==1?'s':''} enrolled`;
+
+  const ul = document.getElementById('sb-list');
+  if (profiles.length === 0 && !enrolling) {
+    ul.innerHTML = '<div style="font-size:0.71rem;color:var(--d3);padding:12px 9px">No participants yet</div>';
+    return;
+  }
+  const items = [...profiles];
+  if (enrolling && !profiles.find(p => p.username === enrolling.username)) {
+    items.push({username: enrolling.username, shade_index: enrolling.shadeIndex, __pending: true});
+  }
+  ul.innerHTML = items.map(p => {
+    const shade = SHADES[(p.shade_index||0) % SHADES.length];
+    return `<div class="sb-row">
+      <div class="sb-sq" style="background:${shade};opacity:${p.__pending?0.4:1}"></div>
+      <span class="sb-name" style="opacity:${p.__pending?0.5:1}">${p.username}${p.__pending?'&nbsp;<em style="font-size:0.63rem;font-style:normal;color:var(--d3)">(enrolling…)</em>':''}</span>
+      ${!p.__pending ? '<span class="sb-tag">&#x2713;</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ── EXPORT ─────────────────────────────────────────────── */
+function exportJSON() {
+  // Export display-safe profile data (no passwords, no hashes)
+  const out = {};
+  profiles.forEach(p => {
+    const nH = p.password_length;
+    out[p.username] = {
+      username:          p.username,
+      enrolled_at:       p.enrolled_at,
+      password_length:   p.password_length,
+      // password deliberately excluded
+      samples:           p.samples,
+      avg_hold_ms:       p.avg_hold,
+      sd_hold_ms:        p.avg_hold_sd,
+      avg_flight_ms:     p.avg_flight,
+      sd_flight_ms:      p.avg_flight_sd,
+      total_time_ms:     p.total_time,
+      hold_means_ms:     (p.positional_means||[]).slice(0,nH).map(v=>+v.toFixed(2)),
+      hold_stds_ms:      (p.positional_stds||[]).slice(0,nH).map(v=>+v.toFixed(2)),
+      flight_means_ms:   (p.positional_means||[]).slice(nH).map(v=>+v.toFixed(2)),
+      flight_stds_ms:    (p.positional_stds||[]).slice(nH).map(v=>+v.toFixed(2)),
+    };
+  });
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `keystroke_profiles_${new Date().toISOString().slice(0,10)}.json`,
+  }).click();
+}
+
+/* ── HELPERS ────────────────────────────────────────────── */
+function showView(v) {
+  ['empty','enrol','dash'].forEach(id =>
+    document.getElementById(`v-${id}`).classList.toggle('hidden', id!==v));
+}
+function setMsg(id, type, html) {
+  const el = document.getElementById(id);
+  el.className = `msg ${type}`; el.innerHTML = html;
+}
+
+/* ── INIT ───────────────────────────────────────────────── */
+checkBackend().then(() => loadProfiles());
+setInterval(checkBackend, 30_000);  // re-check every 30s
+</script>
+</body>
+</html>

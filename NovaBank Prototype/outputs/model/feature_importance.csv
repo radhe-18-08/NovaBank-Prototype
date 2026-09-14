@@ -1,0 +1,14 @@
+feature,importance
+n_keys,0.098316
+typing_speed,0.091185
+total_time,0.091087
+cv_flight,0.08498
+std_hold,0.078526
+cv_hold,0.077759
+mean_flight,0.075256
+max_flight,0.075102
+min_flight,0.073473
+max_hold,0.073103
+mean_hold,0.071287
+min_hold,0.056348
+std_flight,0.053577

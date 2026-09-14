@@ -1,0 +1,50 @@
+{
+  "_description": "Keystroke Dynamics Feature Configuration — NOVA Bank Prototype",
+  "_version": "1.0",
+
+  "aggregate_features": {
+    "_description": "13 password-independent features used by the Random Forest ML model (Signal 1). These are extracted by backend/features.py:extract_aggregate_features() and MUST be in this exact order for training and inference.",
+    "count": 13,
+    "features": [
+      { "index": 0,  "name": "mean_hold",     "description": "Mean key dwell/hold time",                      "unit": "ms"  },
+      { "index": 1,  "name": "std_hold",      "description": "Standard deviation of hold times",              "unit": "ms"  },
+      { "index": 2,  "name": "mean_flight",   "description": "Mean inter-key flight time",                    "unit": "ms"  },
+      { "index": 3,  "name": "std_flight",    "description": "Standard deviation of flight times",            "unit": "ms"  },
+      { "index": 4,  "name": "total_time",    "description": "Total typing duration (last keyup - first keydown)", "unit": "ms" },
+      { "index": 5,  "name": "n_keys",        "description": "Number of keystrokes captured",                 "unit": "count" },
+      { "index": 6,  "name": "typing_speed",  "description": "Typing speed (chars per second)",               "unit": "cps" },
+      { "index": 7,  "name": "cv_hold",       "description": "Coefficient of variation for hold times (capped at 10)", "unit": "dimensionless" },
+      { "index": 8,  "name": "cv_flight",     "description": "Coefficient of variation for flight times (capped at 10)", "unit": "dimensionless" },
+      { "index": 9,  "name": "min_hold",      "description": "Minimum hold time",                             "unit": "ms"  },
+      { "index": 10, "name": "max_hold",      "description": "Maximum hold time",                             "unit": "ms"  },
+      { "index": 11, "name": "min_flight",    "description": "Minimum flight time (0 for single-key passwords)", "unit": "ms" },
+      { "index": 12, "name": "max_flight",    "description": "Maximum flight time (0 for single-key passwords)", "unit": "ms" }
+    ]
+  },
+
+  "positional_features": {
+    "_description": "Per-key-position features used by profile deviation (Signal 2). Password-specific — only comparable within the same user and same password. Mirrors JS extractFeatures().",
+    "order": "[hold_0, hold_1, ..., hold_{n-1}, flight_0, flight_1, ..., flight_{n-2}]",
+    "length": "2n-1 where n = password_length",
+    "hold_index_range":   "0 to n-1",
+    "flight_index_range": "n to 2n-2"
+  },
+
+  "risk_thresholds": {
+    "_description": "Operational three-level decision boundaries used in the submitted prototype (backend/risk_engine.py). NOTE: model/evaluate.py uses a separate binary evaluation threshold of 0.65 for FAR/FRR reporting — that value is intentionally distinct from these operational thresholds.",
+    "ALLOW_THRESHOLD":  0.55,
+    "VERIFY_THRESHOLD": 0.28
+  },
+
+  "combination_weights": {
+    "_description": "Equal weighting used in the submitted prototype. Both signals are normalised to [0,1] before combination.",
+    "ML_WEIGHT":      0.50,
+    "PROFILE_WEIGHT": 0.50
+  },
+
+  "profile_deviation": {
+    "std_floor_ms": 20.0,
+    "z_score_divisor": 8.0,
+    "_note": "avg_z / 8 subtracted from 1.0 to get similarity score. STD_FLOOR_MS=20ms prevents division by near-zero std. divisor=8 means an 8-SD average deviation → 0% match (score clamped to 0)."
+  }
+}

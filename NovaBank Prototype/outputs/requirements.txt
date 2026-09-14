@@ -1,0 +1,23 @@
+# NOVA Bank Keystroke Dynamics — Backend Dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Machine learning
+scikit-learn>=1.4.0
+numpy>=1.26.0
+
+# Data handling (used for ML training dataset loading)
+pandas>=2.2.0
+
+# Password hashing — Argon2id (OWASP recommended, PHC winner)
+# Replaces PBKDF2-SHA256 used in earlier prototype versions.
+# NOTE: If you re-enrol participants after upgrading, old PBKDF2 hashes
+#       (from any previous profiles.json) will NOT verify with Argon2id.
+#       Delete and re-create profiles.json after upgrading.
+argon2-cffi>=21.3.0
+
+# Testing (run: python -m pytest tests/ -v)
+pytest>=7.0

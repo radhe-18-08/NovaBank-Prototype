@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVA Bank — Experiment Console</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;font-family:'Segoe UI',system-ui,Arial,sans-serif;
+  font-size:13px;line-height:1.5;background:#0e0e18;color:#d0d0e0}
+
+:root{
+  --bg:#0e0e18;--bg2:#131320;--bg3:#18182a;--bg4:#1e1e2e;--bg5:#242438;
+  --bd:#2c2c48;--bd2:#383858;
+  --t1:#f0f0f8;--t2:#a0a0c0;--t3:#606080;--t4:#383858;
+  --ok:#34c48a;--ok-dim:#1a4d34;--ok-bg:rgba(52,196,138,0.08);--ok-bd:rgba(52,196,138,0.2);
+  --wrn:#d4a017;--wrn-bg:rgba(212,160,23,0.08);--wrn-bd:rgba(212,160,23,0.25);
+  --err:#e05050;--err-dim:#561616;--err-bg:rgba(224,80,80,0.08);--err-bd:rgba(224,80,80,0.2);
+  --ml:#7b68ee;--ml-bg:rgba(123,104,238,0.1);--ml-bd:rgba(123,104,238,0.25);
+  --pf:#38bdf8;--pf-bg:rgba(56,189,248,0.08);--pf-bd:rgba(56,189,248,0.2);
+  --acc:#7b68ee;
+  --r:8px;--rs:5px;
+}
+
+/* ── LAYOUT ─────────────────────────────── */
+.app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+
+/* ── TOPBAR ─────────────────────────────── */
+.topbar{grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--bd);
+  padding:0 24px;height:52px;display:flex;align-items:center;gap:14px;}
+.tb-logo{font-size:0.9rem;font-weight:800;letter-spacing:3px;color:var(--t1);text-transform:uppercase;}
+.tb-logo em{opacity:0.3;font-style:normal}
+.tb-badge{padding:3px 10px;border-radius:20px;background:var(--ml-bg);
+  border:1px solid var(--ml-bd);font-size:0.6rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--ml);}
+.tb-sep{flex:1}
+.tb-status{display:flex;align-items:center;gap:6px;font-size:0.67rem;color:var(--t3);}
+.be-dot{width:7px;height:7px;border-radius:50%;background:var(--t4);flex-shrink:0}
+.be-dot.ok{background:var(--ok)}.be-dot.err{background:var(--err)}.be-dot.warn{background:var(--wrn)}
+.tb-links{display:flex;gap:14px;margin-left:14px}
+.tb-link{font-size:0.67rem;color:var(--t3);text-decoration:none;padding:4px 10px;
+  border-radius:var(--rs);border:1px solid var(--bd);transition:all 0.12s;}
+.tb-link:hover{color:var(--t1);border-color:var(--bd2)}
+
+/* ── LEFT PANEL — EXPERIMENT FORM ────────── */
+.left-panel{background:var(--bg2);border-right:1px solid var(--bd);
+  padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+
+.section-hd{font-size:0.6rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid var(--bd);}
+
+/* ── LABEL SELECTOR ─────────────────────── */
+.label-picker{display:flex;flex-direction:column;gap:8px}
+.label-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:var(--rs);border:1px solid var(--bd);background:transparent;
+  color:var(--t2);cursor:pointer;text-align:left;transition:all 0.12s;width:100%;}
+.label-btn:hover{border-color:var(--bd2);color:var(--t1)}
+.label-btn.active-genuine{border-color:var(--ok-bd);background:var(--ok-bg);color:var(--ok)}
+.label-btn.active-impostor{border-color:var(--err-bd);background:var(--err-bg);color:var(--err)}
+.lb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--t3)}
+.label-btn.active-genuine .lb-dot{background:var(--ok)}
+.label-btn.active-impostor .lb-dot{background:var(--err)}
+.lb-text{font-size:0.78rem;font-weight:600}
+.lb-sub{font-size:0.64rem;opacity:0.7;margin-top:1px}
+
+.label-note{font-size:0.64rem;color:var(--t3);line-height:1.5;
+  padding:8px 10px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--bg3);}
+.label-note strong{color:var(--wrn)}
+
+/* ── FORM CONTROLS ───────────────────────── */
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:0.6rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3)}
+.fi-sel,.fi{width:100%;background:var(--bg3);border:1px solid var(--bd);
+  border-radius:var(--rs);padding:8px 11px;color:var(--t1);font-size:0.84rem;outline:none;
+  transition:border-color 0.12s;}
+.fi-sel{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23606080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;}
+.fi:focus,.fi-sel:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(123,104,238,0.15)}
+.fi:disabled{opacity:0.35;cursor:not-allowed}
+.fi.pw{letter-spacing:4px}
+
+.btn-run{width:100%;padding:10px;background:var(--acc);color:#fff;border:none;
+  border-radius:var(--rs);font-size:0.78rem;font-weight:700;letter-spacing:0.5px;
+  cursor:pointer;transition:opacity 0.12s;}
+.btn-run:hover:not(:disabled){opacity:0.85}
+.btn-run:disabled{opacity:0.3;cursor:not-allowed}
+
+.fi-err{font-size:0.65rem;color:var(--err);display:none}
+.fi-err.show{display:block}
+
+/* ── RESULT CARD ─────────────────────────── */
+.result-card{border-radius:var(--r);overflow:hidden;border:1px solid var(--bd)}
+.rc-decision{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.rc-decision.allow{background:var(--ok-bg);border-bottom:1px solid var(--ok-bd)}
+.rc-decision.verify{background:var(--wrn-bg);border-bottom:1px solid var(--wrn-bd)}
+.rc-decision.block{background:var(--err-bg);border-bottom:1px solid var(--err-bd)}
+.rc-decision.none{background:var(--bg3);border-bottom:1px solid var(--bd)}
+.rd-badge{font-size:0.7rem;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:20px}
+.allow .rd-badge{background:rgba(52,196,138,0.15);color:var(--ok)}
+.verify .rd-badge{background:rgba(212,160,23,0.15);color:var(--wrn)}
+.block .rd-badge{background:rgba(224,80,80,0.15);color:var(--err)}
+.rd-reason{font-size:0.68rem;color:var(--t2);line-height:1.4}
+.rc-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--bg3)}
+.rs-cell{padding:10px 12px;text-align:center;border-right:1px solid var(--bd)}
+.rs-cell:last-child{border-right:none}
+.rs-label{font-size:0.57rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.rs-val{font-size:1.1rem;font-weight:800;font-family:'Courier New',monospace}
+.rs-val.ml-col{color:var(--ml)}.rs-val.pf-col{color:var(--pf)}.rs-val.cb-col{color:var(--t1)}
+.rs-na{font-size:0.65rem;color:var(--t3);font-family:inherit;font-weight:400}
+.rc-meta{background:var(--bg4);border-top:1px solid var(--bd)}
+.rm-row{display:flex;justify-content:space-between;padding:6px 12px;
+  border-bottom:1px solid var(--bd);font-size:0.68rem;}
+.rm-row:last-child{border-bottom:none}
+.rm-key{color:var(--t3)}.rm-val{color:var(--t1);font-family:'Courier New',monospace;font-size:0.66rem}
+.rm-val.ok{color:var(--ok)}.rm-val.err{color:var(--err)}.rm-val.wrn{color:var(--wrn)}
+.rm-val.allow{color:var(--ok)}.rm-val.verify{color:var(--wrn)}.rm-val.block{color:var(--err)}
+
+/* ── RIGHT PANEL — LOG ───────────────────── */
+.right-panel{background:var(--bg);padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+/* ── SUMMARY BAR ─────────────────────────── */
+.summary-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:1100px){.summary-bar{grid-template-columns:repeat(3,1fr)}}
+.sb-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);
+  padding:12px 14px;text-align:center;}
+.sb-label{font-size:0.57rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:4px}
+.sb-val{font-size:1.4rem;font-weight:800;color:var(--t1)}
+.sb-val.ok{color:var(--ok)}.sb-val.err{color:var(--err)}.sb-val.wrn{color:var(--wrn)}
+
+/* ── MODEL STATUS CARD ───────────────────── */
+.model-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);
+  padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.mc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.mc-dot.trained{background:var(--ok)}.mc-dot.untrained{background:var(--wrn)}
+.mc-label{font-size:0.7rem;font-weight:700}
+.mc-label.trained{color:var(--ok)}.mc-label.untrained{color:var(--wrn)}
+.mc-detail{font-size:0.65rem;color:var(--t3);margin-left:auto}
+
+/* ── LOG TABLE ───────────────────────────── */
+.log-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.log-actions{display:flex;gap:8px}
+.btn-sm{padding:5px 12px;border-radius:var(--rs);border:1px solid var(--bd);
+  background:transparent;color:var(--t2);font-size:0.66rem;cursor:pointer;transition:all 0.12s;}
+.btn-sm:hover{border-color:var(--bd2);color:var(--t1)}
+.btn-sm.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn-sm.primary:hover{opacity:0.85}
+
+.log-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);overflow:auto}
+table.log{width:100%;border-collapse:collapse;font-size:0.7rem;min-width:900px}
+table.log th{padding:8px 12px;text-align:left;white-space:nowrap;
+  font-size:0.57rem;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;
+  color:var(--t3);border-bottom:1px solid var(--bd);background:var(--bg3);}
+table.log th.r{text-align:right}
+table.log td{padding:8px 12px;border-bottom:1px solid var(--bd4,#1e1e2e);
+  vertical-align:middle;white-space:nowrap}
+table.log tr:last-child td{border-bottom:none}
+table.log tr:hover td{background:rgba(255,255,255,0.02)}
+.tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:0.6rem;font-weight:700;letter-spacing:0.5px}
+.tag.genuine{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.tag.impostor{background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd)}
+.tag.unknown{background:var(--bg4);color:var(--t3);border:1px solid var(--bd)}
+.tag.allow{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.tag.verify{background:var(--wrn-bg);color:var(--wrn);border:1px solid var(--wrn-bd)}
+.tag.block{background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd)}
+.mono{font-family:'Courier New',monospace;font-size:0.65rem}
+.score-ml{color:var(--ml)}.score-pf{color:var(--pf)}.score-cb{color:var(--t1)}
+td.score-na{color:var(--t4);font-size:0.64rem}
+
+.empty-state{padding:48px;text-align:center;color:var(--t3);font-size:0.8rem}
+.empty-state p{margin-top:6px;font-size:0.7rem;color:var(--t4)}
+
+.log-footer{font-size:0.63rem;color:var(--t4);text-align:center;
+  padding:10px 12px;border-top:1px solid var(--bd)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── TOPBAR ───────────────────────────────── -->
+  <div class="topbar">
+    <div class="tb-logo">NOVA <em>BANK</em></div>
+    <div class="tb-badge">Researcher Console</div>
+    <div class="tb-sep"></div>
+    <div class="tb-status">
+      <div class="be-dot" id="be-dot"></div>
+      <span id="be-txt">Connecting…</span>
+    </div>
+    <div class="tb-links">
+      <a class="tb-link" href="nova_bank_portal.html">&#x1F3E6; Customer Portal</a>
+      <a class="tb-link" href="enrolment_studio.html">&#x1F4CB; Enrolment Studio</a>
+    </div>
+  </div>
+
+  <!-- ── LEFT — EXPERIMENT FORM ──────────────── -->
+  <div class="left-panel">
+
+    <!-- EXPERIMENT LABEL -->
+    <div>
+      <div class="section-hd">1. Ground Truth Label</div>
+      <div class="label-picker">
+        <button class="label-btn" id="lbl-genuine" onclick="setLabel('genuine')">
+          <div class="lb-dot"></div>
+          <div>
+            <div class="lb-text">Genuine User</div>
+            <div class="lb-sub">The registered account holder is typing</div>
+          </div>
+        </button>
+        <button class="label-btn" id="lbl-impostor" onclick="setLabel('impostor')">
+          <div class="lb-dot"></div>
+          <div>
+            <div class="lb-text">Impostor</div>
+            <div class="lb-sub">A different person using correct credentials</div>
+          </div>
+        </button>
+      </div>
+      <div class="label-note" style="margin-top:8px">
+        <strong>Important:</strong> This label is ground truth only. It is stored in
+        the experiment log for post-hoc evaluation (FAR/FRR). It is never sent to the
+        model and never influences the ALLOW / VERIFY / BLOCK decision.
+      </div>
+    </div>
+
+    <!-- LOGIN DETAILS -->
+    <div>
+      <div class="section-hd">2. Login Attempt</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg">
+          <label class="fl">Username</label>
+          <select class="fi-sel" id="exp-user">
+            <option value="">— Select username —</option>
+          </select>
+          <div class="fi-err" id="err-user">Please select a username.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input type="password" class="fi pw" id="exp-pass"
+            placeholder="Type password…" autocomplete="off" disabled/>
+          <div class="fi-err" id="err-pass"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RUN -->
+    <div>
+      <div class="section-hd">3. Run Experiment</div>
+      <button class="btn-run" id="btn-run" disabled onclick="runExperiment()">
+        &#x25B6; Run Login Test
+      </button>
+      <div style="font-size:0.62rem;color:var(--t3);margin-top:8px;text-align:center">
+        Select a label and type the password, then click Run.
+      </div>
+    </div>
+
+    <!-- LATEST RESULT -->
+    <div>
+      <div class="section-hd">4. Latest Result</div>
+      <div id="result-area">
+        <div style="font-size:0.7rem;color:var(--t3);padding:12px 0">
+          No result yet. Run a login test above.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- ── RIGHT — LOG & SUMMARY ───────────────── -->
+  <div class="right-panel">
+
+    <!-- MODEL STATUS -->
+    <div class="model-card" id="model-card">
+      <div class="mc-dot untrained" id="mc-dot"></div>
+      <div class="mc-label untrained" id="mc-label">ML Model: not trained</div>
+      <div class="mc-detail" id="mc-detail">
+        Run <code>python model/train_model.py</code> to enable Signal 1 (Random Forest)
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div>
+      <div class="section-hd">Experiment Summary</div>
+      <div class="summary-bar" id="summary-bar">
+        <div class="sb-card"><div class="sb-label">Total Attempts</div><div class="sb-val" id="s-total">—</div></div>
+        <div class="sb-card"><div class="sb-label">Genuine</div><div class="sb-val" id="s-genuine">—</div></div>
+        <div class="sb-card"><div class="sb-label">Impostor</div><div class="sb-val" id="s-impostor">—</div></div>
+        <div class="sb-card"><div class="sb-label">FAR (est.)</div><div class="sb-val err" id="s-far">—</div></div>
+        <div class="sb-card"><div class="sb-label">FRR (est.)</div><div class="sb-val wrn" id="s-frr">—</div></div>
+      </div>
+    </div>
+
+    <!-- LOG TABLE -->
+    <div>
+      <div class="log-hd">
+        <div class="section-hd" style="margin:0">Experiment Log</div>
+        <div class="log-actions">
+          <button class="btn-sm" onclick="loadLog()">&#x21BB; Refresh</button>
+          <a class="btn-sm primary" href="http://localhost:5001/api/experiment/export" download="experiment_log.csv">
+            &#x2193; Download CSV
+          </a>
+        </div>
+      </div>
+      <div class="log-wrap">
+        <table class="log">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Time</th>
+              <th>Username</th>
+              <th>Ground Truth</th>
+              <th>Credentials</th>
+              <th class="r">ML Score</th>
+              <th class="r">Profile Score</th>
+              <th class="r">Combined</th>
+              <th>Decision</th>
+              <th>Risk</th>
+              <th>Event ID</th>
+            </tr>
+          </thead>
+          <tbody id="log-body">
+            <tr><td colspan="11" class="empty-state">Loading…</td></tr>
+          </tbody>
+        </table>
+        <div class="log-footer" id="log-footer">—</div>
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+
+</div><!-- /app -->
+
+
+<script>
+const BACKEND_URL = 'http://localhost:5001';
+
+/* ── STATE ───────────────────────────────── */
+let keyData    = [];
+let held       = {};
+let activeLabel = null;   // 'genuine' | 'impostor'
+let experimentCount = 0;
+
+/* ── BACKEND HEALTH ──────────────────────── */
+async function checkBackend() {
+  try {
+    const d = await fetch(`${BACKEND_URL}/api/health`, {signal: AbortSignal.timeout(3000)}).then(r=>r.json());
+    setBE(true, `Backend online · ${d.enrolled_count} enrolled`);
+    updateModelStatus(d.model_loaded);
+    return true;
+  } catch(e) {
+    setBE(false, 'Backend offline — start backend/app.py');
+    return false;
+  }
+}
+
+function setBE(ok, msg) {
+  document.getElementById('be-dot').className = `be-dot ${ok ? 'ok' : 'err'}`;
+  document.getElementById('be-txt').textContent = msg;
+}
+
+function updateModelStatus(trained) {
+  const dot   = document.getElementById('mc-dot');
+  const label = document.getElementById('mc-label');
+  const detail = document.getElementById('mc-detail');
+  dot.className   = `mc-dot ${trained ? 'trained' : 'untrained'}`;
+  label.className = `mc-label ${trained ? 'trained' : 'untrained'}`;
+  label.textContent = trained ? 'ML Model: TRAINED ✓' : 'ML Model: NOT TRAINED';
+  detail.textContent = trained
+    ? 'Random Forest Signal 1 is active. Both signals are contributing to decisions.'
+    : 'Run python model/train_model.py to enable Signal 1 (Random Forest)';
+}
+
+/* ── LOAD PROFILES ───────────────────────── */
+async function loadProfiles() {
+  try {
+    const d = await fetch(`${BACKEND_URL}/api/profiles`).then(r=>r.json());
+    const names = (d.profiles || []).map(p => p.username);
+    const sel = document.getElementById('exp-user');
+    sel.innerHTML = '<option value="">— Select username —</option>';
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+/* ── LABEL SELECTION ─────────────────────── */
+function setLabel(label) {
+  activeLabel = label;
+  document.getElementById('lbl-genuine').className  = `label-btn${label === 'genuine'  ? ' active-genuine'  : ''}`;
+  document.getElementById('lbl-impostor').className = `label-btn${label === 'impostor' ? ' active-impostor' : ''}`;
+  checkRunnable();
+}
+
+/* ── USER SELECTION ──────────────────────── */
+document.getElementById('exp-user').addEventListener('change', function() {
+  clearErrors();
+  keyData = []; held = {};
+  const passEl = document.getElementById('exp-pass');
+  passEl.value = '';
+  passEl.disabled = !this.value;
+  checkRunnable();
+});
+
+function checkRunnable() {
+  const ready = activeLabel && document.getElementById('exp-user').value;
+  document.getElementById('btn-run').disabled = !ready;
+}
+
+/* ── KEYSTROKE CAPTURE ───────────────────── */
+(function initKS() {
+  const input = document.getElementById('exp-pass');
+  input.addEventListener('keydown', e => {
+    if (e.key.length !== 1) return;
+    (held[e.key] = held[e.key] || []).push(performance.now());
+  });
+  input.addEventListener('keyup', e => {
+    if (e.key === 'Enter') { runExperiment(); return; }
+    if (e.key.length !== 1) return;
+    if (held[e.key]?.length)
+      keyData.push({ downTime: held[e.key].shift(), upTime: performance.now() });
+  });
+})();
+
+/* ── RUN EXPERIMENT ──────────────────────── */
+async function runExperiment() {
+  clearErrors();
+  const username = document.getElementById('exp-user').value;
+  const typed    = document.getElementById('exp-pass').value;
+  const kd       = [...keyData];
+
+  document.getElementById('exp-pass').value = '';
+  keyData = []; held = {};
+
+  if (!activeLabel) { alert('Please select a ground truth label first.'); return; }
+  if (!username)    { showErr('err-user', 'Please select a username.'); return; }
+  if (kd.length < 2) {
+    showErr('err-pass', 'Too few keystrokes — type the full password.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+
+  try {
+    const result = await fetch(`${BACKEND_URL}/api/auth`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        username,
+        password:         typed,
+        raw_keydata:      kd,
+        experiment_label: activeLabel,   // ground truth only — never used in model
+      }),
+    }).then(r => r.json());
+
+    btn.disabled = false;
+    btn.textContent = '▶ Run Login Test';
+
+    renderResult(result, username);
+    loadLog();
+    loadSummary();
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '▶ Run Login Test';
+    showErr('err-pass', 'Backend unreachable.');
+  }
+}
+
+/* ── RENDER RESULT ───────────────────────── */
+function renderResult(r, username) {
+  experimentCount++;
+  const decision  = r.decision || 'BLOCK';
+  const decClass  = decision.toLowerCase();
+  const mlScore   = r.ml_score   !== null && r.ml_score   !== undefined ? (r.ml_score   * 100).toFixed(1) + '%' : null;
+  const prfScore  = r.profile_score !== null && r.profile_score !== undefined ? (r.profile_score * 100).toFixed(1) + '%' : null;
+  const combScore = r.combined_score !== null && r.combined_score !== undefined ? (r.combined_score * 100).toFixed(1) + '%' : null;
+  const credOk    = r.credential_result;
+
+  const labelTag = activeLabel === 'genuine'
+    ? '<span class="tag genuine">Genuine</span>'
+    : '<span class="tag impostor">Impostor</span>';
+  const credTag = credOk
+    ? '<span class="tag allow">Correct</span>'
+    : '<span class="tag block">Incorrect</span>';
+  const decTag = `<span class="tag ${decClass}">${decision}</span>`;
+
+  const area = document.getElementById('result-area');
+  area.innerHTML = `
+    <div style="font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:8px">
+      Experiment #${experimentCount} &mdash; ${username} &mdash; ${new Date().toLocaleTimeString()}
+    </div>
+    <div class="result-card">
+      <div class="rc-decision ${decClass}">
+        <div class="rd-badge">${decision}</div>
+        <div class="rd-reason">${r.reason || '—'}</div>
+      </div>
+      <div class="rc-scores">
+        <div class="rs-cell">
+          <div class="rs-label">RF ML Score</div>
+          <div class="rs-val ml-col">${mlScore || '<span class="rs-na">N/A</span>'}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Profile Score</div>
+          <div class="rs-val pf-col">${prfScore || '<span class="rs-na">N/A</span>'}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Combined</div>
+          <div class="rs-val cb-col">${combScore || '<span class="rs-na">N/A</span>'}</div>
+        </div>
+      </div>
+      <div class="rc-meta">
+        <div class="rm-row"><span class="rm-key">Ground Truth</span><span class="rm-val">${labelTag}</span></div>
+        <div class="rm-row"><span class="rm-key">Credentials</span><span class="rm-val">${credTag}</span></div>
+        <div class="rm-row"><span class="rm-key">Decision</span><span class="rm-val">${decTag}</span></div>
+        <div class="rm-row"><span class="rm-key">Risk Level</span><span class="rm-val ${(r.risk_level||'').toLowerCase()}">${r.risk_level || '—'}</span></div>
+        <div class="rm-row"><span class="rm-key">ML Available</span><span class="rm-val ${r.ml_available ? 'ok' : 'wrn'}">${r.ml_available ? 'Yes' : 'No — model not trained'}</span></div>
+        <div class="rm-row"><span class="rm-key">Method</span><span class="rm-val" style="font-family:inherit;font-size:0.64rem;text-align:right;max-width:180px">${r.combination_method || '—'}</span></div>
+        <div class="rm-row"><span class="rm-key">Event ID</span><span class="rm-val">${r.event_id || '—'}</span></div>
+      </div>
+    </div>`;
+}
+
+/* ── LOAD SUMMARY ────────────────────────── */
+async function loadSummary() {
+  try {
+    const d = await fetch(`${BACKEND_URL}/api/experiment/summary`).then(r=>r.json());
+    document.getElementById('s-total').textContent   = d.total_attempts ?? '—';
+    document.getElementById('s-genuine').textContent = d.genuine ?? '—';
+    document.getElementById('s-impostor').textContent= d.impostor ?? '—';
+    const far = d.impostor > 0 ? ((d.impostor_allowed / d.impostor) * 100).toFixed(1) + '%' : '—';
+    const frr = d.genuine  > 0 ? ((d.genuine_blocked  / d.genuine)  * 100).toFixed(1) + '%' : '—';
+    document.getElementById('s-far').textContent = far;
+    document.getElementById('s-frr').textContent = frr;
+  } catch(e) {}
+}
+
+/* ── LOAD LOG ────────────────────────────── */
+async function loadLog() {
+  try {
+    const d = await fetch(`${BACKEND_URL}/api/experiment/log?limit=100`).then(r=>r.json());
+    const entries = d.entries || [];
+    const tbody   = document.getElementById('log-body');
+    const footer  = document.getElementById('log-footer');
+
+    if (entries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="11">
+        <div class="empty-state">No experiment entries yet.
+        <p>Select a ground truth label, enter credentials, and click Run Login Test.</p>
+        </div></td></tr>`;
+      footer.textContent = 'No entries logged.';
+      return;
+    }
+
+    tbody.innerHTML = entries.map((e, i) => {
+      const ts    = e.timestamp ? e.timestamp.replace('T',' ').slice(0,19) : '—';
+      const ml    = e.ml_score    ? `<span class="score-ml">${(parseFloat(e.ml_score)*100).toFixed(1)}%</span>` : `<span style="color:var(--t4)">N/A</span>`;
+      const pf    = e.profile_score ? `<span class="score-pf">${(parseFloat(e.profile_score)*100).toFixed(1)}%</span>` : `<span style="color:var(--t4)">N/A</span>`;
+      const cb    = e.combined_score ? `<span class="score-cb">${(parseFloat(e.combined_score)*100).toFixed(1)}%</span>` : `<span style="color:var(--t4)">N/A</span>`;
+      const lbl   = e.experiment_label || 'unknown';
+      const dec   = (e.decision || '').toLowerCase();
+      const cred  = e.credential_result === 'True' || e.credential_result === true;
+      const num   = entries.length - i;
+      return `<tr>
+        <td class="mono" style="color:var(--t3)">${num}</td>
+        <td class="mono" style="color:var(--t3);font-size:0.62rem">${ts}</td>
+        <td style="font-weight:600;color:var(--t1)">${e.username || '—'}</td>
+        <td><span class="tag ${lbl}">${lbl}</span></td>
+        <td><span class="tag ${cred ? 'allow' : 'block'}">${cred ? '✓ OK' : '✗ Fail'}</span></td>
+        <td class="r">${ml}</td>
+        <td class="r">${pf}</td>
+        <td class="r">${cb}</td>
+        <td><span class="tag ${dec}">${e.decision || '—'}</span></td>
+        <td style="color:var(--t2);font-size:0.65rem">${e.risk_level || '—'}</td>
+        <td class="mono" style="color:var(--t3);font-size:0.6rem">${(e.event_id || '').slice(0,12)}</td>
+      </tr>`;
+    }).join('');
+
+    footer.textContent = `Showing ${Math.min(entries.length, 100)} of ${d.total} total entries (newest first)`;
+  } catch(e) {
+    document.getElementById('log-body').innerHTML =
+      '<tr><td colspan="11" class="empty-state">Failed to load log — is the backend running?</td></tr>';
+  }
+}
+
+/* ── HELPERS ─────────────────────────────── */
+function clearErrors() {
+  document.getElementById('err-user').classList.remove('show');
+  document.getElementById('err-pass').classList.remove('show');
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id); el.textContent = msg; el.classList.add('show');
+}
+
+/* ── INIT ────────────────────────────────── */
+checkBackend().then(() => { loadProfiles(); loadLog(); loadSummary(); });
+setInterval(checkBackend, 30_000);
+setInterval(loadSummary, 10_000);
+</script>
+</body>
+</html>
