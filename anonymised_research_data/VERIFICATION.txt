@@ -1,0 +1,13 @@
+NOVA Bank anonymisation verification
+
+Original profiles: 5
+Anonymised profiles: 5
+Original final experiment rows: 46
+Anonymised final experiment rows: 46
+Behaviourally scored rows: 45
+
+Binary threshold: 0.65
+
+Combined: TP=4 FP=0 TN=20 FN=21 FAR=0.0000 FRR=0.8400 Accuracy=0.5333 F1=0.2759
+Profile only: TP=21 FP=3 TN=17 FN=4 FAR=0.1500 FRR=0.1600 Accuracy=0.8444 F1=0.8571
+Random Forest only: TP=2 FP=0 TN=20 FN=23 FAR=0.0000 FRR=0.9200 Accuracy=0.4889 F1=0.1481
