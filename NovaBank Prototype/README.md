@@ -25,6 +25,36 @@ The two scores are combined as a weighted average (`ML_WEIGHT = 0.50`, `PROFILE_
 The offline evaluation script (`model/evaluate.py`) uses a separate binary threshold of **0.65** for FAR/FRR reporting. This is intentionally distinct from the three-level operational thresholds above, as explained in the dissertation Methods section.
 
 ---
+## Testing the NOVA Bank Prototype
+
+The submitted repository contains the trained Random Forest model and anonymised research/evaluation data. For privacy and security, the live `profiles.json` does not contain the original participant accounts or credentials. Therefore, `/api/health` will initially show `enrolled_count: 0`. This does not mean that the experimental dataset or trained model is missing.
+
+To test the prototype:
+
+1. Install the dependencies:
+   ```bash
+   pip install -r outputs/requirements.txt
+   From the outputs directory, run the automated tests:
+
+cd outputs
+python -m pytest tests -v
+
+The submitted version contains 147 automated tests.
+
+Start the Flask backend:
+
+cd backend
+python app.py
+
+Confirm that the backend is running by opening:
+
+http://127.0.0.1:5001/api/health
+
+The response should report status: "ok" and model_loaded: true.
+
+Open enrolment_studio.html and create a new test user. Complete all eight password repetitions using normal typing behaviour.
+Open nova_bank_portal.html and log in using the newly enrolled account to test the behavioural authentication workflow.
+experiment_console.html can be used for controlled genuine/impostor testing.
 
 ## System Architecture
 
