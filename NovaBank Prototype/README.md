@@ -31,30 +31,130 @@ The submitted repository contains the trained Random Forest model and anonymised
 
 To test the prototype:
 
-1. Install the dependencies:
-   ```bash
-   pip install -r outputs/requirements.txt
-   From the outputs directory, run the automated tests:
+### 1. Install the Dependencies
 
+From the main project directory, run:
+
+```bash
+pip install -r outputs/requirements.txt
+```
+
+### 2. Run the Automated Tests
+
+Move into the `outputs` directory:
+
+```bash
 cd outputs
+```
+
+Then run:
+
+```bash
 python -m pytest tests -v
+```
 
-The submitted version contains 147 automated tests.
+The submitted version contains **147 automated tests**. A successful test run should show that all 147 tests have passed.
 
-Start the Flask backend:
+### 3. Start the Flask Backend
 
+From the `outputs` directory, move into the backend folder:
+
+```bash
 cd backend
+```
+
+Start the application:
+
+```bash
 python app.py
+```
 
-Confirm that the backend is running by opening:
+The Flask backend should start on:
 
+```text
+http://127.0.0.1:5001
+```
+
+Keep the terminal running while testing the prototype.
+
+### 4. Check the Backend Health
+
+Open the following address in a web browser:
+
+```text
 http://127.0.0.1:5001/api/health
+```
 
-The response should report status: "ok" and model_loaded: true.
+A successful response should report:
 
-Open enrolment_studio.html and create a new test user. Complete all eight password repetitions using normal typing behaviour.
-Open nova_bank_portal.html and log in using the newly enrolled account to test the behavioural authentication workflow.
-experiment_console.html can be used for controlled genuine/impostor testing.
+```text
+"status": "ok"
+"model_loaded": true
+```
+
+The response may initially show:
+
+```text
+"enrolled_count": 0
+```
+
+This is expected because the submitted live profile store does not contain the original participant accounts or credentials.
+
+### 5. Test User Enrolment
+
+Open:
+
+```text
+enrolment_studio.html
+```
+
+Create a new test user and complete all **eight password repetitions** using normal typing behaviour.
+
+The enrolment process creates a personalised keystroke profile for the new test user.
+
+### 6. Test the NOVA Bank Login
+
+Open:
+
+```text
+nova_bank_portal.html
+```
+
+Log in using the account created through the Enrolment Studio.
+
+The prototype will capture the new keystroke timings and use the available behavioural authentication signals to produce an:
+
+```text
+ALLOW
+VERIFY
+BLOCK
+```
+
+decision.
+
+### 7. Test the Experiment Console
+
+For controlled genuine/impostor testing, open:
+
+```text
+experiment_console.html
+```
+
+The Experiment Console is intended for research testing and is separate from the customer-facing NOVA Bank Portal.
+
+### Note on Submitted Research Data
+
+The live profile store is intentionally provided without the original participant accounts or credentials. Therefore, `/api/health` may initially report `enrolled_count: 0`.
+
+The anonymised participant research/evaluation data are supplied separately so that the completed experiment and its reported results can be examined without including participant-identifying information or credentials.
+
+The historical results reported in the dissertation should be assessed using the supplied anonymised research/evaluation data rather than by expecting a newly created test user to reproduce the same scores.
+
+New typing attempts naturally generate different behavioural measurements and therefore may produce different authentication scores and decisions.
+
+---
+
+## System Architecture
 
 ## System Architecture
 
